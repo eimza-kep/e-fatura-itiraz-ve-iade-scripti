@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>E-Fatura İtiraz ve İade Talep Portalı | TTK 18/3 Yasal Süre Takibi</title>
+    <style>
+        :root {
+            --primary: #dc2626;
+            --primary-hover: #b91c1c;
+            --secondary: #0f172a;
+            --bg: #f8fafc;
+            --card: #ffffff;
+            --border: #e2e8f0;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --warning: #f59e0b;
+            --success: #16a34a;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+        body { background: var(--bg); color: var(--text-main); line-height: 1.5; padding: 32px 16px; min-height: 100vh; }
+        .container { max-width: 900px; margin: 0 auto; }
+
+        .header {
+            text-align: center; margin-bottom: 24px; background: white; padding: 30px 20px;
+            border-radius: 12px; border: 1px solid var(--border); box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+            position: relative; overflow: hidden;
+        }
+        .header::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px; background: var(--primary); }
+        .header-badge {
+            display: inline-block; background: #fee2e2; color: var(--primary);
+            font-size: 0.78rem; font-weight: 700; padding: 4px 12px; border-radius: 999px; margin-bottom: 10px;
+        }
+        .header h1 { font-size: 1.6rem; color: var(--secondary); margin-bottom: 8px; font-weight: 800; }
+        .header p { font-size: 0.9rem; color: var(--text-muted); max-width: 680px; margin: 0 auto; }
+
+        .deadline-box {
+            background: #fffbeb; border: 1px solid #fef3c7; border-left: 4px solid var(--warning);
+            padding: 14px 18px; border-radius: 8px; margin-bottom: 24px; font-size: 0.88rem; color: #92400e;
+            display: flex; align-items: center; justify-content: space-between; gap: 12px;
+        }
+
+        .card {
+            background: var(--card); border: 1px solid var(--border); border-radius: 12px;
+            padding: 26px; margin-bottom: 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+        }
+        .card-title {
+            font-size: 1.05rem; font-weight: 700; color: var(--secondary); margin-bottom: 18px;
+            display: flex; align-items: center; gap: 8px; border-bottom: 2px solid #f1f5f9; padding-bottom: 8px;
+        }
+
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+        .form-group { display: flex; flex-direction: column; gap: 6px; }
+        .form-group.full { grid-column: span 2; }
+        label { font-size: 0.83rem; font-weight: 600; color: #334155; }
+        label span.req { color: var(--primary); }
+
+        input, select, textarea {
+            width: 100%; padding: 10px 14px; border: 1px solid var(--border); border-radius: 8px;
+            font-size: 0.88rem; outline: none; background: #f8fafc; color: var(--text-main);
+        }
+        input:focus, select:focus, textarea:focus { border-color: var(--primary); background: white; box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1); }
+        textarea { min-height: 90px; resize: vertical; }
+
+        .calc-preview {
+            background: #f1f5f9; padding: 14px; border-radius: 8px; margin-top: 14px;
+            display: flex; justify-content: space-between; align-items: center; font-size: 0.88rem;
+        }
+
+        .btn-submit {
+            width: 100%; background: var(--primary); color: white; border: none; padding: 14px;
+            border-radius: 8px; font-weight: 700; font-size: 1rem; cursor: pointer; transition: all 0.2s;
+        }
+        .btn-submit:hover { background: var(--primary-hover); }
+
+        .result-box {
+            display: none; background: white; border: 2px solid #fecaca; border-radius: 12px;
+            padding: 32px 24px; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.05);
+        }
+
+        .notice-sheet {
+            border: 2px solid #0f172a; padding: 28px; border-radius: 8px; background: #fff; margin-top: 20px;
+            font-family: 'Times New Roman', Times, serif; line-height: 1.6; font-size: 1rem;
+        }
+        .notice-title { text-align: center; font-weight: bold; font-size: 1.25rem; margin-bottom: 20px; text-decoration: underline; }
+
+        @media (max-width: 640px) {
+            .form-grid { grid-template-columns: 1fr; }
+            .form-group.full { grid-column: span 1; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <div class="header-badge">TTK 18/3 VE VUK UYUMLU</div>
+        <h1>E-Fatura / E-Arşiv İtiraz ve İade Portalı</h1>
+        <p>Hatalı, mükerrer veya sipariş dışı düzenlenen e-Faturalara karşı yasal 8 günlük itiraz süresini takip edin, resmi KEP ve Noter ihtarnamesini tek tıkla oluşturun.</p>
+    </div>
+
+    <div class="deadline-box">
+        <div>
+            <b>⚠️ Türk Ticaret Kanunu Madde 18/3:</b> Faturayı alan kimse, aldığı tarihten itibaren <b>8 gün</b> içinde faturanın içeriği hakkında itirazda bulunmazsa faturanın içeriğini kabul etmiş sayılır.
+        </div>
+    </div>
+
+    <form id="itirazForm" onsubmit="handleFormSubmit(event)">
+        <!-- 1. İtiraz Edilen Fatura Bilgileri -->
+        <div class="card">
+            <h2 class="card-title">📄 1. İtiraz Konusu Fatura Bilgileri</h2>
+            <div class="form-grid">
+                <div class="form-group">
+                    <label>Fatura No (16 Haneli ETTN/Fatura No) <span class="req">*</span></label>
+                    <input type="text" id="invoiceNumber" required placeholder="Örn: GIB2026000001234" maxlength="16">
+                </div>
+                <div class="form-group">
+                    <label>Fatura Düzenleme Tarihi <span class="req">*</span></label>
+                    <input type="date" id="invoiceDate" required>
+                </div>
+                <div class="form-group">
+                    <label>Faturanın Size Ulaştığı (Tebliğ) Tarihi <span class="req">*</span></label>
+                    <input type="date" id="receivedDate" required onchange="calculateDeadline()">
+                </div>
+                <div class="form-group">
+                    <label>Fatura Tutarı (KDV Dahil TL) <span class="req">*</span></label>
+                    <input type="number" step="0.01" id="invoiceAmount" required placeholder="0.00">
+                </div>
+                <div class="form-group">
+                    <label>Faturayı Kesen Firma / Şahıs Unvanı <span class="req">*</span></label>
+                    <input type="text" id="sellerTitle" required placeholder="Faturayı düzenleyen firma unvanı">
+                </div>
+                <div class="form-group">
+                    <label>Faturayı Kesen VKN / TCKN <span class="req">*</span></label>
+                    <input type="text" id="sellerVkn" required placeholder="10 haneli VKN veya 11 haneli TCKN" maxlength="11">
+                </div>
+                <div class="form-group full">
+                    <label>Faturayı Kesen Firmanın KEP Adresi (Varsa)</label>
+                    <input type="email" id="sellerKep" placeholder="firma@hs01.kep.tr">
+                </div>
+            </div>
+
+            <!-- Yasal Süre Geri Sayım Kutusu -->
+            <div id="deadlineDisplay" class="calc-preview" style="display: none;">
+                <div>
+                    <b>Son İtiraz Günü (8. Gün):</b> <span id="deadlineDateVal">-</span>
+                </div>
+                <div>
+                    <b>Durum:</b> <span id="deadlineStatusBadge" style="font-weight: 700;">-</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. İtiraz Eden (Sizin) Firma Bilgileriniz -->
+        <div class="card">
+            <h2 class="card-title">🏢 2. İtiraz Eden Mükellef (Sizin Şirketiniz)</h2>
+            <div class="form-grid">
+                <div class="form-group">
+                    <label>Firma Unvanınız <span class="req">*</span></label>
+                    <input type="text" id="buyerTitle" required placeholder="Şirket unvanınız">
+                </div>
+                <div class="form-group">
+                    <label>Vergi Kimlik Numaranız (VKN/TCKN) <span class="req">*</span></label>
+                    <input type="text" id="buyerVkn" required placeholder="VKN / TCKN" maxlength="11">
+                </div>
+                <div class="form-group">
+                    <label>Yetkili Adı Soyadı <span class="req">*</span></label>
+                    <input type="text" id="authorizedPerson" required placeholder="İmza yetkilisi adı soyadı">
+                </div>
+                <div class="form-group">
+                    <label>İletişim Telefon / E-Posta <span class="req">*</span></label>
+                    <input type="text" id="contactInfo" required placeholder="0212... / muhasebe@sirketiniz.com">
+                </div>
+                <div class="form-group full">
+                    <label>Şirketinizin KEP Adresi</label>
+                    <input type="email" id="buyerKep" placeholder="sirketiniz@hs03.kep.tr">
+                </div>
+            </div>
+        </div>
+
+        <!-- 3. İtiraz Gerekçesi ve Yöntemi -->
+        <div class="card">
+            <h2 class="card-title">⚖️ 3. İtiraz Sebebi ve Bildirim Kanalı</h2>
+            <div class="form-grid">
+                <div class="form-group">
+                    <label>İtiraz Sebebi / Kategorisi <span class="req">*</span></label>
+                    <select id="reasonCategory" required>
+                        <option value="">Seçiniz...</option>
+                        <option value="Sipariş / Sözleşme Dışı Mal ve Hizmet">Sipariş / Sözleşme Dışı Mal ve Hizmet</option>
+                        <option value="Yanlış Birim Fiyat veya Tutar Hesaplaması">Yanlış Birim Fiyat veya Tutar Hesaplaması</option>
+                        <option value="Teslim Edilmeyen / Eksik Mallar">Teslim Edilmeyen / Eksik Mallar</option>
+                        <option value="Mükerrer Düzenlenen Fatura">Mükerrer Düzenlenen Fatura</option>
+                        <option value="Sözleşmeye Aykırı Vade / Şartlar">Sözleşmeye Aykırı Vade / Şartlar</option>
+                        <option value="Hatalı KDV / Vergi Oranı Uygulaması">Hatalı KDV / Vergi Oranı Uygulaması</option>
+                        <option value="Diğer">Diğer</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Yasal Bildirim Kanalı <span class="req">*</span></label>
+                    <select id="notificationChannel" required>
+                        <option value="KEP (Kayıtlı Elektronik Posta)">KEP (Kayıtlı Elektronik Posta - En Hızlı & Geçerli)</option>
+                        <option value="GİB e-Fatura İptal/İtiraz Portalı">GİB e-Fatura İptal/İtiraz Portalı</option>
+                        <option value="Noter İhtarnamesi">Noter İhtarnamesi</option>
+                        <option value="İadeli Taahhütlü Posta (PTT)">İadeli Taahhütlü Posta (PTT)</option>
+                    </select>
+                </div>
+                <div class="form-group full">
+                    <label>Ayrıntılı İtiraz Açıklaması ve Talepleriniz <span class="req">*</span></label>
+                    <textarea id="detailedReason" required placeholder="Örn: Şirketimiz ile aranızda tanzim olunan sipariş formuna aykırı olarak birim fiyat 100 TL yerine 150 TL kesilmiş olup, faturanın iptal edilerek düzeltilmiş yeni faturanın düzenlenmesi veya tarafımıza iade faturası kesilmesine izin verilmesi talep olunur..."></textarea>
+                </div>
+            </div>
+        </div>
+
+        <button type="submit" class="btn-submit" id="submitBtn">
+            <span>🛡️ İtiraz Kaydını Oluştur & Resmi Dilekçeyi Üret</span>
+        </button>
+    </form>
+
+    <!-- Success View & Printable Notice -->
+    <div class="result-box" id="resultBox">
+        <div style="text-align: center; margin-bottom: 20px;">
+            <div style="font-size: 2.8rem; margin-bottom: 8px;">📑</div>
+            <h2 style="color: var(--secondary);">E-Fatura İtiraz Kaydınız Başarıyla Oluşturuldu</h2>
+            <p style="color: var(--text-muted); font-size: 0.9rem;">
+                İtiraz takip numaranız ve TTK 18/3 uyarınca hazırlanan resmi itiraz bildirimi aşağıdadır.
+            </p>
+            <div style="margin: 14px 0; font-size: 1.25rem; font-weight: 800; color: var(--primary);" id="trackingCodeDisplay">ITIRAZ-2026-0000</div>
+        </div>
+
+        <div class="notice-sheet" id="noticePrintArea">
+            <div class="notice-title">FATURA İÇERİĞİNE VE TUTARINA İTİRAZ İHTARNAMESİ<br><span style="font-size: 0.9rem; font-weight: normal;">(TTK m. 18/3 ve 21/2 Uyarınca)</span></div>
+            
+            <p><b>MUHATAP (FATURAYI KESEN):</b> <span id="prSellerTitle"></span></p>
+            <p><b>VKN / TCKN:</b> <span id="prSellerVkn"></span></p>
+            <p><b>KEP ADRESİ:</b> <span id="prSellerKep"></span></p>
+            <br>
+            <p><b>KEŞİDECİ (İTİRAZ EDEN):</b> <span id="prBuyerTitle"></span></p>
+            <p><b>VKN / TCKN:</b> <span id="prBuyerVkn"></span></p>
+            <p><b>KEP ADRESİ:</b> <span id="prBuyerKep"></span></p>
+            <p><b>YETKİLİ / İLETİŞİM:</b> <span id="prBuyerAuth"></span> | <span id="prBuyerContact"></span></p>
+            <br>
+            <p><b>İTİRAZ EDİLEN FATURA NO:</b> <span id="prInvoiceNo"></span></p>
+            <p><b>FATURA DÜZENLEME TARİHİ:</b> <span id="prInvoiceDate"></span></p>
+            <p><b>FATURA TEBLİĞ TARİHİ:</b> <span id="prReceivedDate"></span></p>
+            <p><b>FATURA TUTARI:</b> <span id="prInvoiceAmount"></span> TL (KDV Dahil)</p>
+            <p><b>İTİRAZ GEREKÇESİ / KONUSU:</b> <span id="prCategory"></span></p>
+            <br>
+            <p><b>AÇIKLAMALAR VE TALEP:</b></p>
+            <p style="text-indent: 24px; margin-top: 6px;" id="prDetailedReason"></p>
+            <br>
+            <p>
+                6102 sayılı Türk Ticaret Kanunu'nun 18. maddesinin 3. fıkrası ve 21. maddesinin 2. fıkrası gereğince, yasal 8 günlük itiraz süresi içerisinde bahse konu faturayı, faturaya konu edilen borcu ve içeriğini KABUL ETMEDİĞİMİZİ, faturanın derhal yasal kayıtlardan terkin edilmesini veya iptal/iade işlemlerinin başlatılmasını, aksi takdirde yasal yollara başvurulacağını ve yargılama giderleri ile vekalet ücretinin tarafınıza yükleneceğini ihtaren bildiririz.
+            </p>
+            <br><br>
+            <div style="display: flex; justify-content: space-between; align-items: flex-end;">
+                <div><b>Tarih:</b> <span id="prNoticeDate"></span></div>
+                <div style="text-align: right;">
+                    <b>İtiraz Eden Mükellef</b><br>
+                    <span id="prSignerTitle"></span><br>
+                    Kaşe / E-İmza
+                </div>
+            </div>
+        </div>
+
+        <div style="margin-top: 24px; display: flex; justify-content: center; gap: 12px;">
+            <button class="btn-submit" style="width: auto; padding: 10px 22px; background: #0f172a;" onclick="window.print()">🖨️ Resmi Dilekçeyi Yazdır / PDF</button>
+            <button class="btn-submit" style="width: auto; padding: 10px 22px; background: #e2e8f0; color: #334155;" onclick="location.reload()">➕ Yeni Fatura İtirazı</button>
+        </div>
+    </div>
+</div>
+
+<script>
+function calculateDeadline() {
+    const receivedVal = document.getElementById('receivedDate').value;
+    if (!receivedVal) return;
+
+    const rDate = new Date(receivedVal);
+    const deadlineDate = new Date(rDate);
+    deadlineDate.setDate(deadlineDate.getDate() + 8);
+
+    const today = new Date();
+    today.setHours(0,0,0,0);
+    deadlineDate.setHours(0,0,0,0);
+
+    const diffTime = deadlineDate - today;
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+    const box = document.getElementById('deadlineDisplay');
+    const dateVal = document.getElementById('deadlineDateVal');
+    const badge = document.getElementById('deadlineStatusBadge');
+    box.style.display = 'flex';
+    dateVal.innerText = deadlineDate.toLocaleDateString('tr-TR');
+
+    if (diffDays < 0) {
+        badge.innerText = `Süre Doldu (${Math.abs(diffDays)} gün gecikti!)`;
+        badge.style.color = '#dc2626';
+    } else if (diffDays <= 2) {
+        badge.innerText = `KRİTİK! Son ${diffDays} gün kaldı`;
+        badge.style.color = '#dc2626';
+    } else {
+        badge.innerText = `Geçerli (${diffDays} gün kaldı)`;
+        badge.style.color = '#16a34a';
+    }
+}
+
+async function handleFormSubmit(e) {
+    e.preventDefault();
+    const btn = document.getElementById('submitBtn');
+    btn.disabled = true;
+    btn.innerText = '⏳ İşleniyor...';
+
+    const payload = {
+        invoice_number: document.getElementById('invoiceNumber').value.trim(),
+        invoice_date: document.getElementById('invoiceDate').value,
+        received_date: document.getElementById('receivedDate').value,
+        invoice_amount: parseFloat(document.getElementById('invoiceAmount').value) || 0,
+        seller_title: document.getElementById('sellerTitle').value.trim(),
+        seller_vkn: document.getElementById('sellerVkn').value.trim(),
+        seller_kep: document.getElementById('sellerKep').value.trim(),
+        buyer_title: document.getElementById('buyerTitle').value.trim(),
+        buyer_vkn: document.getElementById('buyerVkn').value.trim(),
+        authorized_person: document.getElementById('authorizedPerson').value.trim(),
+        contact_info: document.getElementById('contactInfo').value.trim(),
+        buyer_kep: document.getElementById('buyerKep').value.trim(),
+        reason_category: document.getElementById('reasonCategory').value,
+        notification_channel: document.getElementById('notificationChannel').value,
+        detailed_reason: document.getElementById('detailedReason').value.trim(),
+        created_at: new Date().toISOString()
+    };
+
+    let trackingCode = 'ITIRAZ-2026-' + Math.floor(1000 + Math.random() * 9000);
+
+    try {
+        const res = await fetch('/api/itiraz-et', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+        if (res.ok) {
+            const data = await res.json();
+            if (data.tracking_code) trackingCode = data.tracking_code;
+        }
+    } catch (err) {
+        const local = JSON.parse(localStorage.getItem('fatura_itirazlar') || '[]');
+        payload.tracking_code = trackingCode;
+        local.push(payload);
+        localStorage.setItem('fatura_itirazlar', JSON.stringify(local));
+    }
+
+    document.getElementById('itirazForm').style.display = 'none';
+    document.getElementById('resultBox').style.display = 'block';
+    document.getElementById('trackingCodeDisplay').innerText = trackingCode;
+
+    // Fill notice print sheet
+    document.getElementById('prSellerTitle').innerText = payload.seller_title;
+    document.getElementById('prSellerVkn').innerText = payload.seller_vkn;
+    document.getElementById('prSellerKep').innerText = payload.seller_kep || 'Belirtilmedi';
+    document.getElementById('prBuyerTitle').innerText = payload.buyer_title;
+    document.getElementById('prBuyerVkn').innerText = payload.buyer_vkn;
+    document.getElementById('prBuyerKep').innerText = payload.buyer_kep || 'Belirtilmedi';
+    document.getElementById('prBuyerAuth').innerText = payload.authorized_person;
+    document.getElementById('prBuyerContact').innerText = payload.contact_info;
+    document.getElementById('prInvoiceNo').innerText = payload.invoice_number;
+    document.getElementById('prInvoiceDate').innerText = payload.invoice_date;
+    document.getElementById('prReceivedDate').innerText = payload.received_date;
+    document.getElementById('prInvoiceAmount').innerText = payload.invoice_amount.toLocaleString('tr-TR', { minimumFractionDigits: 2 });
+    document.getElementById('prCategory').innerText = payload.reason_category;
+    document.getElementById('prDetailedReason').innerText = payload.detailed_reason;
+    document.getElementById('prNoticeDate').innerText = new Date().toLocaleDateString('tr-TR');
+    document.getElementById('prSignerTitle').innerText = payload.buyer_title;
+}
+</script>
+
+</body>
+</html>
