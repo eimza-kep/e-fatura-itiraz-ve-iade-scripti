@@ -76,6 +76,19 @@ python scripts/test_itiraz.py
 
 ---
 
+## 🌐 E-Dönüşüm Açık Kaynak Ekosistemi
+
+Bu portal, [@eimza-kep](https://github.com/eimza-kep) açık kaynak ekosisteminin fatura denetim ve itiraz bileşenidir. İlgili diğer araçlar:
+
+* 📄 [e-fatura-xml-goruntuleyici](https://github.com/eimza-kep/e-fatura-xml-goruntuleyici) - Gelen e-Fatura ve e-İrsaliye XML dosyalarını ayrıştırma ve KDV tevkifat kontrolü.
+* 📨 [kep-adresi-dogrulayici](https://github.com/eimza-kep/kep-adresi-dogrulayici) - TTK 18/3 uyarınca noter ve KEP itiraz adresi sözdizim doğrulama aracı.
+* 📊 [muhasebe-excel-sablonlari](https://github.com/eimza-kep/muhasebe-excel-sablonlari) - Tevkifat, Ba-Bs mutabakat ve e-SMM hesaplama tabloları.
+* 🏢 [kobi-finans-yonetim-excel-sablonlari](https://github.com/eimza-kep/kobi-finans-yonetim-excel-sablonlari) - KOBİ nakit akışı, vade yaşlandırma ve başabaş analizi.
+* 🌟 [awesome-turkiye-e-donusum](https://github.com/eimza-kep/awesome-turkiye-e-donusum) - Türkiye e-Dönüşüm açık kaynak araçları ve kütüphaneleri kürasyonu.
+
+---
+
 ## ⚖️ Lisans
 
 Bu proje [MIT Lisansı](LICENSE) kapsamında açık kaynak olarak sunulmuştur.
+
