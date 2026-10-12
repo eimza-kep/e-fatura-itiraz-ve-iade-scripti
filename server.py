@@ -7,8 +7,8 @@ import sys
 import random
 from urllib.parse import urlparse
 
-PORT = 8085
-DB_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "fatura_itirazlar.db")
+PORT = int(os.environ.get("PORT", 8085))
+DB_FILE = os.environ.get("DATABASE_PATH", os.path.join(os.path.dirname(os.path.abspath(__file__)), "fatura_itirazlar.db"))
 
 def init_db():
     conn = sqlite3.connect(DB_FILE)
