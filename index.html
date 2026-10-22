@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>E-Fatura İtiraz ve İade Talep Portalı | TTK 18/3 Yasal Süre Takibi</title>
+    <title>E-Fatura İtiraz ve İade Talep Portalı | TTK 18/3 Yasal Süre Takibi & UBL Ayrıştırma</title>
     <style>
         :root {
             --primary: #dc2626;
@@ -16,11 +16,12 @@
             --text-muted: #64748b;
             --warning: #f59e0b;
             --success: #16a34a;
+            --blue: #2563eb;
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
         body { background: var(--bg); color: var(--text-main); line-height: 1.5; padding: 32px 16px; min-height: 100vh; }
-        .container { max-width: 900px; margin: 0 auto; }
+        .container { max-width: 920px; margin: 0 auto; }
 
         .header {
             text-align: center; margin-bottom: 24px; background: white; padding: 30px 20px;
@@ -33,7 +34,7 @@
             font-size: 0.78rem; font-weight: 700; padding: 4px 12px; border-radius: 999px; margin-bottom: 10px;
         }
         .header h1 { font-size: 1.6rem; color: var(--secondary); margin-bottom: 8px; font-weight: 800; }
-        .header p { font-size: 0.9rem; color: var(--text-muted); max-width: 680px; margin: 0 auto; }
+        .header p { font-size: 0.9rem; color: var(--text-muted); max-width: 720px; margin: 0 auto; }
 
         .deadline-box {
             background: #fffbeb; border: 1px solid #fef3c7; border-left: 4px solid var(--warning);
@@ -43,11 +44,25 @@
 
         .card {
             background: var(--card); border: 1px solid var(--border); border-radius: 12px;
-            padding: 26px; margin-bottom: 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+            padding: 24px; margin-bottom: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.03);
         }
         .card-title {
             font-size: 1.05rem; font-weight: 700; color: var(--secondary); margin-bottom: 18px;
-            display: flex; align-items: center; gap: 8px; border-bottom: 2px solid #f1f5f9; padding-bottom: 8px;
+            display: flex; align-items: center; justify-content: space-between; border-bottom: 2px solid #f1f5f9; padding-bottom: 8px;
+        }
+
+        /* UBL Dropzone */
+        .dropzone {
+            border: 2px dashed #cbd5e1; border-radius: 10px; padding: 22px; text-align: center;
+            background: #f8fafc; cursor: pointer; transition: all 0.2s ease; margin-bottom: 18px;
+        }
+        .dropzone:hover, .dropzone.dragover { border-color: var(--blue); background: #eff6ff; }
+        .dropzone-icon { font-size: 2rem; margin-bottom: 6px; }
+        .dropzone-title { font-weight: 700; color: #1e293b; font-size: 0.95rem; }
+        .dropzone-desc { font-size: 0.8rem; color: var(--text-muted); margin-top: 4px; }
+        .ubl-pill {
+            display: inline-flex; align-items: center; gap: 6px; background: #dcfce7;
+            color: #15803d; font-size: 0.8rem; font-weight: 700; padding: 4px 10px; border-radius: 6px; margin-top: 8px;
         }
 
         .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
@@ -62,6 +77,12 @@
         }
         input:focus, select:focus, textarea:focus { border-color: var(--primary); background: white; box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1); }
         textarea { min-height: 90px; resize: vertical; }
+
+        .kep-hint {
+            font-size: 0.78rem; font-weight: 600; margin-top: 4px;
+        }
+        .kep-hint.valid { color: #16a34a; }
+        .kep-hint.invalid { color: #dc2626; }
 
         .calc-preview {
             background: #f1f5f9; padding: 14px; border-radius: 8px; margin-top: 14px;
@@ -85,6 +106,12 @@
         }
         .notice-title { text-align: center; font-weight: bold; font-size: 1.25rem; margin-bottom: 20px; text-decoration: underline; }
 
+        .portal-links {
+            display: flex; gap: 12px; justify-content: center; margin-top: 24px; font-size: 0.85rem;
+        }
+        .portal-links a { color: var(--blue); text-decoration: none; font-weight: 600; }
+        .portal-links a:hover { text-decoration: underline; }
+
         @media (max-width: 640px) {
             .form-grid { grid-template-columns: 1fr; }
             .form-group.full { grid-column: span 1; }
@@ -95,14 +122,29 @@
 
 <div class="container">
     <div class="header">
-        <div class="header-badge">TTK 18/3 VE VUK UYUMLU</div>
+        <div class="header-badge">TTK 18/3 VE VUK UYUMLU • UBL 2.1 & KEP DOĞRULAMA</div>
         <h1>E-Fatura / E-Arşiv İtiraz ve İade Portalı</h1>
-        <p>Hatalı, mükerrer veya sipariş dışı düzenlenen e-Faturalara karşı yasal 8 günlük itiraz süresini takip edin, resmi KEP ve Noter ihtarnamesini tek tıkla oluşturun.</p>
+        <p>Hatalı, mükerrer veya sipariş dışı düzenlenen e-Faturalara karşı yasal 8 günlük itiraz süresini takip edin, UBL faturanızı otomatik ayrıştırın ve KEP/Noter itiraz mazbatasını tanzim edin.</p>
     </div>
 
     <div class="deadline-box">
         <div>
-            <b>⚠️ Türk Ticaret Kanunu Madde 18/3:</b> Faturayı alan kimse, aldığı tarihten itibaren <b>8 gün</b> içinde faturanın içeriği hakkında itirazda bulunmazsa faturanın içeriğini kabul etmiş sayılır.
+            <b>⚠️ Türk Ticaret Kanunu Madde 18/3 & 21/2:</b> Faturayı alan kimse, tebliğ tarihinden itibaren <b>8 gün</b> içinde içeriğine itiraz etmezse kabul etmiş sayılır. İtirazın noter, KEP veya iadeli taahhütlü mektup ile yapılması yasal delil şartıdır.
+        </div>
+    </div>
+
+    <!-- UBL XML Sürükle Bırak / Otomatik Doldurma -->
+    <div class="card">
+        <div class="card-title">
+            <span>⚡ Hızlı Başlangıç: UBL Fatura XML Yükle</span>
+            <span style="font-size: 0.78rem; font-weight: 600; color: var(--blue);">Otomatik Veri Ayrıştırma</span>
+        </div>
+        <div class="dropzone" id="ublDropzone" onclick="document.getElementById('xmlFileInput').click()">
+            <div class="dropzone-icon">📥</div>
+            <div class="dropzone-title">Fatura UBL XML Dosyasını Sürükleyip Bırakın veya Seçin</div>
+            <div class="dropzone-desc">.xml formatında e-Fatura veya e-Arşiv faturanızı yükleyerek tüm alanları saniyeler içinde otomatik doldurun.</div>
+            <input type="file" id="xmlFileInput" accept=".xml" style="display: none;" onchange="handleXmlUpload(event)">
+            <div id="ublStatusBadge" style="display: none;"></div>
         </div>
     </div>
 
@@ -113,7 +155,8 @@
             <div class="form-grid">
                 <div class="form-group">
                     <label>Fatura No (16 Haneli ETTN/Fatura No) <span class="req">*</span></label>
-                    <input type="text" id="invoiceNumber" required placeholder="Örn: GIB2026000001234" maxlength="16">
+                    <input type="text" id="invoiceNumber" required placeholder="Örn: GIB2026000001234" maxlength="36">
+                    <input type="hidden" id="invoiceUuid" value="">
                 </div>
                 <div class="form-group">
                     <label>Fatura Düzenleme Tarihi <span class="req">*</span></label>
@@ -137,7 +180,8 @@
                 </div>
                 <div class="form-group full">
                     <label>Faturayı Kesen Firmanın KEP Adresi (Varsa)</label>
-                    <input type="email" id="sellerKep" placeholder="firma@hs01.kep.tr">
+                    <input type="email" id="sellerKep" placeholder="firma@hs01.kep.tr" oninput="validateKepInput('sellerKep', 'sellerKepHint')">
+                    <div id="sellerKepHint" class="kep-hint"></div>
                 </div>
             </div>
 
@@ -173,15 +217,16 @@
                     <input type="text" id="contactInfo" required placeholder="0212... / muhasebe@sirketiniz.com">
                 </div>
                 <div class="form-group full">
-                    <label>Şirketinizin KEP Adresi</label>
-                    <input type="email" id="buyerKep" placeholder="sirketiniz@hs03.kep.tr">
+                    <label>Şirketinizin KEP Adresi (İtiraz Bildirim KEP Hesabınız)</label>
+                    <input type="email" id="buyerKep" placeholder="sirketiniz@hs03.kep.tr" oninput="validateKepInput('buyerKep', 'buyerKepHint')">
+                    <div id="buyerKepHint" class="kep-hint"></div>
                 </div>
             </div>
         </div>
 
-        <!-- 3. İtiraz Gerekçesi ve Yöntemi -->
+        <!-- 3. İtiraz Gerekçesi, Yöntemi ve Delil Mazbata Takibi -->
         <div class="card">
-            <h2 class="card-title">⚖️ 3. İtiraz Sebebi ve Bildirim Kanalı</h2>
+            <h2 class="card-title">⚖️ 3. İtiraz Sebebi, Bildirim Kanalı ve Delil Mazbatası</h2>
             <div class="form-grid">
                 <div class="form-group">
                     <label>İtiraz Sebebi / Kategorisi <span class="req">*</span></label>
@@ -198,22 +243,38 @@
                 </div>
                 <div class="form-group">
                     <label>Yasal Bildirim Kanalı <span class="req">*</span></label>
-                    <select id="notificationChannel" required>
-                        <option value="KEP (Kayıtlı Elektronik Posta)">KEP (Kayıtlı Elektronik Posta - En Hızlı & Geçerli)</option>
+                    <select id="notificationChannel" required onchange="handleChannelChange()">
+                        <option value="KEP (Kayıtlı Elektronik Posta)">KEP (Kayıtlı Elektronik Posta - En Hızlı & Kesin Delil)</option>
                         <option value="GİB e-Fatura İptal/İtiraz Portalı">GİB e-Fatura İptal/İtiraz Portalı</option>
                         <option value="Noter İhtarnamesi">Noter İhtarnamesi</option>
                         <option value="İadeli Taahhütlü Posta (PTT)">İadeli Taahhütlü Posta (PTT)</option>
                     </select>
                 </div>
+
+                <!-- Delil / Mazbata Takip Alanı -->
+                <div class="form-group">
+                    <label>Delil / Mazbata Türü</label>
+                    <select id="evidenceType">
+                        <option value="KEP">KEP Delil Paketi / GUID</option>
+                        <option value="NOTER">Noter Yevmiye Numarası</option>
+                        <option value="PTT">PTT Tebliğ Barkod No</option>
+                        <option value="GIB_PORTAL">GİB İtiraz Talep No</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Mazbata / Barkod / Takip Kodu</label>
+                    <input type="text" id="evidenceBarcode" placeholder="Örn: KEP-2026-..., 2026/12345 veya RR123456789TR">
+                </div>
+
                 <div class="form-group full">
                     <label>Ayrıntılı İtiraz Açıklaması ve Talepleriniz <span class="req">*</span></label>
-                    <textarea id="detailedReason" required placeholder="Örn: Şirketimiz ile aranızda tanzim olunan sipariş formuna aykırı olarak birim fiyat 100 TL yerine 150 TL kesilmiş olup, faturanın iptal edilerek düzeltilmiş yeni faturanın düzenlenmesi veya tarafımıza iade faturası kesilmesine izin verilmesi talep olunur..."></textarea>
+                    <textarea id="detailedReason" required placeholder="Örn: Şirketimiz ile aranızda tanzim olunan sipariş şartlarına aykırı olarak mal teslim edilmeksizin düzenlenen faturanın iptal edilmesi veya yasal kayıtlarımızdan terkin edilmesi için TTK 18/3 uyarınca süresi içinde itiraz ederiz..."></textarea>
                 </div>
             </div>
         </div>
 
         <button type="submit" class="btn-submit" id="submitBtn">
-            <span>🛡️ İtiraz Kaydını Oluştur & Resmi Dilekçeyi Üret</span>
+            <span>🛡️ İtiraz Kaydını Oluştur & Resmi Dilekçeyi Tanzim Et</span>
         </button>
     </form>
 
@@ -229,7 +290,7 @@
         </div>
 
         <div class="notice-sheet" id="noticePrintArea">
-            <div class="notice-title">FATURA İÇERİĞİNE VE TUTARINA İTİRAZ İHTARNAMESİ<br><span style="font-size: 0.9rem; font-weight: normal;">(TTK m. 18/3 ve 21/2 Uyarınca)</span></div>
+            <div class="notice-title">FATURA İÇERİĞİNE VE TUTARINA İTİRAZ İHTARNAMESİ<br><span style="font-size: 0.9rem; font-weight: normal;">(TTK m. 18/3 ve m. 21/2 Uyarınca Yasal İtiraz Bildirimi)</span></div>
             
             <p><b>MUHATAP (FATURAYI KESEN):</b> <span id="prSellerTitle"></span></p>
             <p><b>VKN / TCKN:</b> <span id="prSellerVkn"></span></p>
@@ -241,16 +302,18 @@
             <p><b>YETKİLİ / İLETİŞİM:</b> <span id="prBuyerAuth"></span> | <span id="prBuyerContact"></span></p>
             <br>
             <p><b>İTİRAZ EDİLEN FATURA NO:</b> <span id="prInvoiceNo"></span></p>
+            <p><b>FATURA ETTN / UUID:</b> <span id="prInvoiceUuid"></span></p>
             <p><b>FATURA DÜZENLEME TARİHİ:</b> <span id="prInvoiceDate"></span></p>
             <p><b>FATURA TEBLİĞ TARİHİ:</b> <span id="prReceivedDate"></span></p>
             <p><b>FATURA TUTARI:</b> <span id="prInvoiceAmount"></span> TL (KDV Dahil)</p>
             <p><b>İTİRAZ GEREKÇESİ / KONUSU:</b> <span id="prCategory"></span></p>
+            <p><b>DELİL / MAZBATA TAKİP NO:</b> <span id="prEvidence"></span></p>
             <br>
-            <p><b>AÇIKLAMALAR VE TALEP:</b></p>
+            <p><b>AÇIKLAMALAR VE YASAL TALEPLER:</b></p>
             <p style="text-indent: 24px; margin-top: 6px;" id="prDetailedReason"></p>
             <br>
             <p>
-                6102 sayılı Türk Ticaret Kanunu'nun 18. maddesinin 3. fıkrası ve 21. maddesinin 2. fıkrası gereğince, yasal 8 günlük itiraz süresi içerisinde bahse konu faturayı, faturaya konu edilen borcu ve içeriğini KABUL ETMEDİĞİMİZİ, faturanın derhal yasal kayıtlardan terkin edilmesini veya iptal/iade işlemlerinin başlatılmasını, aksi takdirde yasal yollara başvurulacağını ve yargılama giderleri ile vekalet ücretinin tarafınıza yükleneceğini ihtaren bildiririz.
+                6102 sayılı Türk Ticaret Kanunu'nun 18. maddesinin 3. fıkrası ve 21. maddesinin 2. fıkrası gereğince, yasal 8 günlük itiraz süresi içerisinde bahse konu faturayı, faturaya konu edilen borcu ve içeriğini KABUL ETMEDİĞİMİZİ, faturanın derhal yasal kayıtlardan terkin edilmesini veya iptal/iade işlemlerinin başlatılmasını, aksi takdirde yasal yollara başvurulacağını ve yargılama giderleri ile vekalet ücretinin tarafınıza yükleneceğini KEP/Noter delili ile ihtaren bildiririz.
             </p>
             <br><br>
             <div style="display: flex; justify-content: space-between; align-items: flex-end;">
@@ -263,14 +326,167 @@
             </div>
         </div>
 
-        <div style="margin-top: 24px; display: flex; justify-content: center; gap: 12px;">
+        <div style="margin-top: 24px; display: flex; justify-content: center; gap: 12px; flex-wrap: wrap;">
             <button class="btn-submit" style="width: auto; padding: 10px 22px; background: #0f172a;" onclick="window.print()">🖨️ Resmi Dilekçeyi Yazdır / PDF</button>
+            <a href="/admin" class="btn-submit" style="width: auto; padding: 10px 22px; background: #2563eb; text-decoration: none; display: inline-flex; align-items: center;">⚖️ Yönetim Paneli</a>
             <button class="btn-submit" style="width: auto; padding: 10px 22px; background: #e2e8f0; color: #334155;" onclick="location.reload()">➕ Yeni Fatura İtirazı</button>
         </div>
+    </div>
+
+    <div class="portal-links">
+        <a href="https://earsiv.efatura.gov.tr" target="_blank">🔗 GİB e-Fatura İptal/İtiraz Portalı</a> •
+        <a href="https://www.btk.gov.tr" target="_blank">🔗 BTK Yetkili KEPHS Listesi</a> •
+        <a href="/admin">📊 Yönetim Paneli</a>
     </div>
 </div>
 
 <script>
+// Drag and Drop UBL XML Handler
+const dropzone = document.getElementById('ublDropzone');
+['dragenter', 'dragover'].forEach(eventName => {
+    dropzone.addEventListener(eventName, (e) => { e.preventDefault(); dropzone.classList.add('dragover'); }, false);
+});
+['dragleave', 'drop'].forEach(eventName => {
+    dropzone.addEventListener(eventName, (e) => { e.preventDefault(); dropzone.classList.remove('dragover'); }, false);
+});
+
+dropzone.addEventListener('drop', (e) => {
+    const files = e.dataTransfer.files;
+    if (files.length > 0) {
+        processXmlFile(files[0]);
+    }
+});
+
+function handleXmlUpload(e) {
+    const file = e.target.files[0];
+    if (file) processXmlFile(file);
+}
+
+function processXmlFile(file) {
+    const reader = new FileReader();
+    reader.onload = function(evt) {
+        const xmlText = evt.target.result;
+        parseXmlContent(xmlText, file.name);
+    };
+    reader.readAsText(file);
+}
+
+function parseXmlContent(xmlText, fileName) {
+    try {
+        const parser = new DOMParser();
+        const xmlDoc = parser.parseFromString(xmlText, "text/xml");
+
+        // Helper function namespace agnostic
+        function getVal(tagName) {
+            const els = xmlDoc.getElementsByTagName(tagName);
+            if (els && els.length > 0) return els[0].textContent.trim();
+            return "";
+        }
+
+        const invId = getVal("ID") || getVal("cbc:ID");
+        const uuid = getVal("UUID") || getVal("cbc:UUID");
+        const issueDate = getVal("IssueDate") || getVal("cbc:IssueDate");
+        const payableAmount = getVal("PayableAmount") || getVal("cbc:PayableAmount");
+
+        // Satıcı & Alıcı Bilgileri
+        let sVkn = "", sTitle = "", sKep = "";
+        let bVkn = "", bTitle = "", bKep = "";
+
+        const supplier = xmlDoc.getElementsByTagName("AccountingSupplierParty")[0] ||
+                         xmlDoc.getElementsByTagName("cac:AccountingSupplierParty")[0];
+        if (supplier) {
+            const ids = supplier.getElementsByTagName("ID");
+            for (let el of ids) {
+                const txt = el.textContent.trim();
+                if ((txt.length === 10 || txt.length === 11) && !isNaN(txt)) { sVkn = txt; break; }
+            }
+            const names = supplier.getElementsByTagName("Name");
+            if (names.length > 0) sTitle = names[0].textContent.trim();
+            const emails = supplier.getElementsByTagName("ElectronicMail");
+            if (emails.length > 0) sKep = emails[0].textContent.trim();
+        }
+
+        const customer = xmlDoc.getElementsByTagName("AccountingCustomerParty")[0] ||
+                         xmlDoc.getElementsByTagName("cac:AccountingCustomerParty")[0];
+        if (customer) {
+            const ids = customer.getElementsByTagName("ID");
+            for (let el of ids) {
+                const txt = el.textContent.trim();
+                if ((txt.length === 10 || txt.length === 11) && !isNaN(txt)) { bVkn = txt; break; }
+            }
+            const names = customer.getElementsByTagName("Name");
+            if (names.length > 0) bTitle = names[0].textContent.trim();
+            const emails = customer.getElementsByTagName("ElectronicMail");
+            if (emails.length > 0) bKep = emails[0].textContent.trim();
+        }
+
+        if (invId) document.getElementById('invoiceNumber').value = invId;
+        if (uuid) document.getElementById('invoiceUuid').value = uuid;
+        if (issueDate) {
+            document.getElementById('invoiceDate').value = issueDate;
+            if (!document.getElementById('receivedDate').value) {
+                document.getElementById('receivedDate').value = issueDate;
+                calculateDeadline();
+            }
+        }
+        if (payableAmount) document.getElementById('invoiceAmount').value = parseFloat(payableAmount.replace(',', '.'));
+        if (sTitle) document.getElementById('sellerTitle').value = sTitle;
+        if (sVkn) document.getElementById('sellerVkn').value = sVkn;
+        if (sKep) {
+            document.getElementById('sellerKep').value = sKep;
+            validateKepInput('sellerKep', 'sellerKepHint');
+        }
+        if (bTitle) document.getElementById('buyerTitle').value = bTitle;
+        if (bVkn) document.getElementById('buyerVkn').value = bVkn;
+        if (bKep) {
+            document.getElementById('buyerKep').value = bKep;
+            validateKepInput('buyerKep', 'buyerKepHint');
+        }
+
+        const badge = document.getElementById('ublStatusBadge');
+        badge.className = 'ubl-pill';
+        badge.style.display = 'inline-flex';
+        badge.innerText = `✓ UBL Faturası Yüklendi: ${invId || fileName} (${payableAmount} TL)`;
+    } catch (e) {
+        alert("UBL XML ayrıştırma hatası: " + e.message);
+    }
+}
+
+// Live KEP Address Validation
+function validateKepInput(inputId, hintId) {
+    const val = document.getElementById(inputId).value.trim();
+    const hint = document.getElementById(hintId);
+    if (!val) {
+        hint.innerText = '';
+        return;
+    }
+
+    const kepPattern = /^[a-zA-Z0-9_\-\.\+]+@([a-zA-Z0-9_\-]+\.)*kep\.tr$/i;
+    if (kepPattern.test(val)) {
+        let provider = "BTK Onaylı KEPHS";
+        if (val.includes("hs01")) provider = "TNB KEP / hs01";
+        else if (val.includes("hs02")) provider = "TÜRKKEP / hs02";
+        else if (val.includes("hs03")) provider = "PTT KEP / hs03";
+        else if (val.includes("turkkep")) provider = "TÜRKKEP KEPHS";
+        else if (val.includes("pttkep")) provider = "PTT KEP";
+
+        hint.className = 'kep-hint valid';
+        hint.innerText = `✓ Geçerli KEP Adresi (${provider})`;
+    } else {
+        hint.className = 'kep-hint invalid';
+        hint.innerText = `⚠️ KEP adresi '@hs01.kep.tr' veya '*.kep.tr' ile bitmelidir.`;
+    }
+}
+
+function handleChannelChange() {
+    const ch = document.getElementById('notificationChannel').value;
+    const evType = document.getElementById('evidenceType');
+    if (ch.includes("KEP")) evType.value = "KEP";
+    else if (ch.includes("Noter")) evType.value = "NOTER";
+    else if (ch.includes("PTT")) evType.value = "PTT";
+    else if (ch.includes("GİB")) evType.value = "GIB_PORTAL";
+}
+
 function calculateDeadline() {
     const receivedVal = document.getElementById('receivedDate').value;
     if (!receivedVal) return;
@@ -312,6 +528,7 @@ async function handleFormSubmit(e) {
 
     const payload = {
         invoice_number: document.getElementById('invoiceNumber').value.trim(),
+        invoice_uuid: document.getElementById('invoiceUuid').value.trim(),
         invoice_date: document.getElementById('invoiceDate').value,
         received_date: document.getElementById('receivedDate').value,
         invoice_amount: parseFloat(document.getElementById('invoiceAmount').value) || 0,
@@ -325,6 +542,8 @@ async function handleFormSubmit(e) {
         buyer_kep: document.getElementById('buyerKep').value.trim(),
         reason_category: document.getElementById('reasonCategory').value,
         notification_channel: document.getElementById('notificationChannel').value,
+        evidence_type: document.getElementById('evidenceType').value,
+        evidence_barcode: document.getElementById('evidenceBarcode').value.trim(),
         detailed_reason: document.getElementById('detailedReason').value.trim(),
         created_at: new Date().toISOString()
     };
@@ -362,10 +581,13 @@ async function handleFormSubmit(e) {
     document.getElementById('prBuyerAuth').innerText = payload.authorized_person;
     document.getElementById('prBuyerContact').innerText = payload.contact_info;
     document.getElementById('prInvoiceNo').innerText = payload.invoice_number;
+    document.getElementById('prInvoiceUuid').innerText = payload.invoice_uuid || 'Belirtilmedi';
     document.getElementById('prInvoiceDate').innerText = payload.invoice_date;
     document.getElementById('prReceivedDate').innerText = payload.received_date;
     document.getElementById('prInvoiceAmount').innerText = payload.invoice_amount.toLocaleString('tr-TR', { minimumFractionDigits: 2 });
     document.getElementById('prCategory').innerText = payload.reason_category;
+    document.getElementById('prEvidence').innerText = (payload.evidence_type && payload.evidence_barcode) ?
+        `${payload.evidence_type}: ${payload.evidence_barcode}` : 'İtiraz evrakı ekinde iletilecektir';
     document.getElementById('prDetailedReason').innerText = payload.detailed_reason;
     document.getElementById('prNoticeDate').innerText = new Date().toLocaleDateString('tr-TR');
     document.getElementById('prSignerTitle').innerText = payload.buyer_title;

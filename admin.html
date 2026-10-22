@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>E-Fatura İtiraz Takip Paneli | Muhasebe & Hukuk Portalı</title>
+    <title>E-Fatura İtiraz Takip Paneli | TTK 18/3 & Delil Mazbata Yönetimi</title>
     <style>
         :root {
             --primary: #dc2626;
@@ -16,7 +16,7 @@
         }
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
         body { background: var(--bg); color: var(--text-main); line-height: 1.5; padding: 24px; }
-        .container { max-width: 1200px; margin: 0 auto; }
+        .container { max-width: 1280px; margin: 0 auto; }
         .navbar { display: flex; justify-content: space-between; align-items: center; background: white; padding: 18px 24px; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.03); }
         .navbar h1 { font-size: 1.3rem; font-weight: 800; color: #0f172a; display: flex; align-items: center; gap: 8px; }
         .nav-actions { display: flex; gap: 10px; }
@@ -39,17 +39,17 @@
         td { padding: 12px 16px; border-bottom: 1px solid var(--border); vertical-align: middle; }
         tr:hover { background: #f1f5f9; }
 
-        .badge { display: inline-block; padding: 4px 10px; border-radius: 999px; font-size: 0.75rem; font-weight: 700; }
+        .badge { display: inline-block; padding: 4px 10px; border-radius: 999px; font-size: 0.75rem; font-weight: 700; white-space: nowrap; }
         .badge-pending { background: #fef3c7; color: #b45309; }
         .badge-danger { background: #fee2e2; color: #b91c1c; }
         .badge-success { background: #dcfce7; color: #15803d; }
         .badge-info { background: #dbeafe; color: #1e40af; }
 
         .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); align-items: center; justify-content: center; padding: 20px; z-index: 50; }
-        .modal-card { background: white; width: 100%; max-width: 650px; border-radius: 12px; padding: 24px; max-height: 90vh; overflow-y: auto; }
+        .modal-card { background: white; width: 100%; max-width: 680px; border-radius: 12px; padding: 24px; max-height: 90vh; overflow-y: auto; }
         .modal-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 12px; margin-bottom: 16px; }
         .detail-row { display: flex; margin-bottom: 10px; font-size: 0.88rem; }
-        .detail-lbl { width: 160px; font-weight: 600; color: var(--text-muted); }
+        .detail-lbl { width: 180px; font-weight: 600; color: var(--text-muted); }
         .detail-val { flex: 1; color: var(--text-main); }
     </style>
 </head>
@@ -57,9 +57,9 @@
 
 <div class="container">
     <div class="navbar">
-        <h1>⚖️ E-Fatura İtiraz ve İade Yönetim Paneli</h1>
+        <h1>⚖️ E-Fatura İtiraz ve Delil Mazbata Yönetim Paneli</h1>
         <div class="nav-actions">
-            <a href="/" class="btn" target="_blank">🌐 İtiraz Oluştur</a>
+            <a href="/" class="btn" target="_blank">🌐 İtiraz Portalı</a>
             <button class="btn btn-primary" onclick="exportCSV()">📥 CSV Dışa Aktar</button>
             <button class="btn" onclick="fetchData()">🔄 Yenile</button>
         </div>
@@ -85,7 +85,7 @@
     </div>
 
     <div class="filter-bar">
-        <input type="text" id="searchInput" placeholder="Fatura No, Şirket Unvanı, VKN ara..." oninput="filterData()">
+        <input type="text" id="searchInput" placeholder="Fatura No, UUID, Şirket Unvanı, VKN veya Delil Barkodu ara..." oninput="filterData()">
         <select id="filterCategory" onchange="filterData()">
             <option value="">Tüm İtiraz Sebepleri</option>
             <option value="Sipariş / Sözleşme Dışı Mal ve Hizmet">Sipariş / Sözleşme Dışı</option>
@@ -112,7 +112,7 @@
                     <th>Fatura Tutarı</th>
                     <th>Tebliğ Tarihi</th>
                     <th>Kalan Süre (TTK 18/3)</th>
-                    <th>Kanal</th>
+                    <th>Delil / Mazbata</th>
                     <th>Durum</th>
                     <th>İşlem</th>
                 </tr>
@@ -132,18 +132,24 @@
             <button onclick="closeModal()" style="border:none; background:none; font-size: 1.2rem; cursor:pointer;">✖</button>
         </div>
         <div id="modalBody"></div>
-        <div style="margin-top: 20px; display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border); padding-top: 14px;">
-            <div style="display: flex; gap: 8px; align-items: center;">
-                <label style="font-size: 0.85rem; font-weight: 600;">Durum:</label>
-                <select id="changeStatusSelect" style="padding: 6px 10px; border-radius: 6px; border: 1px solid var(--border); font-size: 0.85rem;">
-                    <option value="İtiraz Gönderildi (KEP/Noter)">İtiraz Gönderildi (KEP/Noter)</option>
-                    <option value="Cevap Bekleniyor">Cevap Bekleniyor</option>
-                    <option value="Kabul Edildi (İptal/İade Alındı)">Kabul Edildi (İptal/İade Alındı)</option>
-                    <option value="Reddedildi">Reddedildi</option>
-                </select>
-                <button class="btn btn-primary" onclick="updateCurrentStatus()">Güncelle</button>
+        <div style="margin-top: 20px; display: flex; flex-direction: column; gap: 12px; border-top: 1px solid var(--border); padding-top: 14px;">
+            <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+                <label style="font-size: 0.85rem; font-weight: 600;">Delil Barkod / GUID:</label>
+                <input type="text" id="modalEvidenceInput" style="padding: 6px 10px; border-radius: 6px; border: 1px solid var(--border); font-size: 0.85rem; flex: 1;" placeholder="KEP GUID / Noter No">
             </div>
-            <button class="btn" onclick="window.print()">🖨️ Yazdır</button>
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div style="display: flex; gap: 8px; align-items: center;">
+                    <label style="font-size: 0.85rem; font-weight: 600;">Durum:</label>
+                    <select id="changeStatusSelect" style="padding: 6px 10px; border-radius: 6px; border: 1px solid var(--border); font-size: 0.85rem;">
+                        <option value="İtiraz Gönderildi (KEP/Noter)">İtiraz Gönderildi (KEP/Noter)</option>
+                        <option value="Cevap Bekleniyor">Cevap Bekleniyor</option>
+                        <option value="Kabul Edildi (İptal/İade Alındı)">Kabul Edildi (İptal/İade Alındı)</option>
+                        <option value="Reddedildi">Reddedildi</option>
+                    </select>
+                    <button class="btn btn-primary" onclick="updateCurrentStatus()">Güncelle</button>
+                </div>
+                <button class="btn" onclick="window.print()">🖨️ Yazdır</button>
+            </div>
         </div>
     </div>
 </div>
@@ -180,8 +186,8 @@ function getRemainingDays(receivedDateStr) {
     deadline.setHours(0,0,0,0);
     const diffDays = Math.ceil((deadline - today) / (1000 * 60 * 60 * 24));
 
-    if (diffDays < 0) return { days: diffDays, text: `${Math.abs(diffDays)} gün geçti`, badge: 'badge-danger' };
-    if (diffDays <= 2) return { days: diffDays, text: `Son ${diffDays} gün!`, badge: 'badge-danger' };
+    if (diffDays < 0) return { days: diffDays, text: `${Math.abs(diffDays)} gün geçti (Süre Doldu)`, badge: 'badge-danger' };
+    if (diffDays <= 2) return { days: diffDays, text: `Kritik! ${diffDays} gün kaldı`, badge: 'badge-danger' };
     return { days: diffDays, text: `${diffDays} gün kaldı`, badge: 'badge-info' };
 }
 
@@ -192,8 +198,10 @@ function render() {
 
     const filtered = allData.filter(d => {
         const matchesQ = !q || (d.invoice_number && d.invoice_number.toLowerCase().includes(q)) ||
+                              (d.invoice_uuid && d.invoice_uuid.toLowerCase().includes(q)) ||
                               (d.seller_title && d.seller_title.toLowerCase().includes(q)) ||
                               (d.seller_vkn && d.seller_vkn.includes(q)) ||
+                              (d.evidence_barcode && d.evidence_barcode.toLowerCase().includes(q)) ||
                               (d.buyer_title && d.buyer_title.toLowerCase().includes(q));
         const matchesCat = !fCat || d.reason_category === fCat;
         const matchesStatus = !fStatus || (d.status || 'İtiraz Gönderildi (KEP/Noter)') === fStatus;
@@ -227,6 +235,8 @@ function render() {
         if (st.includes('Red')) badgeClass = 'badge-danger';
 
         const amountFormatted = (parseFloat(d.invoice_amount) || 0).toLocaleString('tr-TR', { minimumFractionDigits: 2 }) + ' TL';
+        const evidenceDisplay = d.evidence_barcode ?
+            `<code>${escapeHtml(d.evidence_barcode)}</code>` : '<span style="color:#94a3b8;">-</span>';
 
         return `
             <tr>
@@ -236,7 +246,7 @@ function render() {
                 <td><b>${amountFormatted}</b></td>
                 <td>${escapeHtml(d.received_date || '')}</td>
                 <td><span class="badge ${rem.badge}">${rem.text}</span></td>
-                <td><small>${escapeHtml(d.notification_channel || '')}</small></td>
+                <td><small>${evidenceDisplay}</small></td>
                 <td><span class="badge ${badgeClass}">${st}</span></td>
                 <td>
                     <button class="btn" style="padding: 4px 8px; font-size: 0.8rem;" onclick="viewDetail(${i})">Detay</button>
@@ -254,17 +264,20 @@ function viewDetail(idx) {
 
     document.getElementById('modalTitle').innerText = `${activeItem.invoice_number} - İtiraz Detayı`;
     document.getElementById('changeStatusSelect').value = activeItem.status || 'İtiraz Gönderildi (KEP/Noter)';
+    document.getElementById('modalEvidenceInput').value = activeItem.evidence_barcode || '';
 
     const rem = getRemainingDays(activeItem.received_date);
     const b = document.getElementById('modalBody');
     b.innerHTML = `
-        <div class="detail-row"><div class="detail-lbl">İtiraz Kodu:</div><div class="detail-val"><b>${escapeHtml(activeItem.tracking_code || '')}</b></div></div>
+        <div class="detail-row"><div class="detail-lbl">İtiraz Takip Kodu:</div><div class="detail-val"><b>${escapeHtml(activeItem.tracking_code || '')}</b></div></div>
         <div class="detail-row"><div class="detail-lbl">Fatura Numarası:</div><div class="detail-val"><b>${escapeHtml(activeItem.invoice_number || '')}</b></div></div>
+        <div class="detail-row"><div class="detail-lbl">ETTN / Belge UUID:</div><div class="detail-val"><code>${escapeHtml(activeItem.invoice_uuid || 'Belirtilmedi')}</code></div></div>
         <div class="detail-row"><div class="detail-lbl">Fatura Tutarı:</div><div class="detail-val"><b>${(parseFloat(activeItem.invoice_amount)||0).toLocaleString('tr-TR', {minimumFractionDigits:2})} TL</b></div></div>
         <div class="detail-row"><div class="detail-lbl">Satıcı Bilgisi:</div><div class="detail-val">${escapeHtml(activeItem.seller_title || '')} (VKN: ${escapeHtml(activeItem.seller_vkn || '')})</div></div>
         <div class="detail-row"><div class="detail-lbl">Satıcı KEP:</div><div class="detail-val">${escapeHtml(activeItem.seller_kep || 'Belirtilmedi')}</div></div>
         <div class="detail-row"><div class="detail-lbl">İtiraz Eden Mükellef:</div><div class="detail-val">${escapeHtml(activeItem.buyer_title || '')} (VKN: ${escapeHtml(activeItem.buyer_vkn || '')})</div></div>
         <div class="detail-row"><div class="detail-lbl">Tebliğ / Yasal Süre:</div><div class="detail-val">${escapeHtml(activeItem.received_date || '')} (${rem.text})</div></div>
+        <div class="detail-row"><div class="detail-lbl">Delil / Mazbata:</div><div class="detail-val"><b>${escapeHtml(activeItem.evidence_type || 'KEP')}:</b> <code>${escapeHtml(activeItem.evidence_barcode || 'Girilmedi')}</code></div></div>
         <div class="detail-row"><div class="detail-lbl">İtiraz Sebebi:</div><div class="detail-val"><b>${escapeHtml(activeItem.reason_category || '')}</b></div></div>
         <div class="detail-row"><div class="detail-lbl">Bildirim Kanalı:</div><div class="detail-val">${escapeHtml(activeItem.notification_channel || '')}</div></div>
         <div style="margin-top: 12px; background: #f8fafc; padding: 12px; border-radius: 6px; border: 1px solid var(--border);">
@@ -281,13 +294,19 @@ function closeModal() { document.getElementById('detailModal').style.display = '
 async function updateCurrentStatus() {
     if (!activeItem) return;
     const newStatus = document.getElementById('changeStatusSelect').value;
+    const newBarcode = document.getElementById('modalEvidenceInput').value.trim();
     activeItem.status = newStatus;
+    activeItem.evidence_barcode = newBarcode;
 
     try {
         await fetch('/api/durum-guncelle', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ tracking_code: activeItem.tracking_code, status: newStatus })
+            body: JSON.stringify({
+                tracking_code: activeItem.tracking_code,
+                status: newStatus,
+                evidence_barcode: newBarcode
+            })
         });
     } catch (e) {}
 
@@ -298,9 +317,9 @@ async function updateCurrentStatus() {
 
 function exportCSV() {
     if (!allData || allData.length === 0) { alert('Dışa aktarılacak itiraz verisi bulunamadı.'); return; }
-    let csv = '\uFEFFTakip No,Fatura No,Fatura Tarihi,Tebliğ Tarihi,Tutar TL,Satıcı Unvan,Satıcı VKN,Satıcı KEP,Alıcı Unvan,Alıcı VKN,İtiraz Nedeni,Kanal,Durum\n';
+    let csv = '\uFEFFTakip No,Fatura No,UUID,Fatura Tarihi,Tebliğ Tarihi,Tutar TL,Satıcı Unvan,Satıcı VKN,Satıcı KEP,Alıcı Unvan,Alıcı VKN,Delil Türü,Delil Barkodu,İtiraz Nedeni,Kanal,Durum\n';
     allData.forEach(d => {
-        csv += `"${d.tracking_code || ''}","${d.invoice_number || ''}","${d.invoice_date || ''}","${d.received_date || ''}","${d.invoice_amount || 0}","${d.seller_title || ''}","${d.seller_vkn || ''}","${d.seller_kep || ''}","${d.buyer_title || ''}","${d.buyer_vkn || ''}","${d.reason_category || ''}","${d.notification_channel || ''}","${d.status || 'İtiraz Gönderildi'}"\n`;
+        csv += `"${d.tracking_code || ''}","${d.invoice_number || ''}","${d.invoice_uuid || ''}","${d.invoice_date || ''}","${d.received_date || ''}","${d.invoice_amount || 0}","${d.seller_title || ''}","${d.seller_vkn || ''}","${d.seller_kep || ''}","${d.buyer_title || ''}","${d.buyer_vkn || ''}","${d.evidence_type || ''}","${d.evidence_barcode || ''}","${d.reason_category || ''}","${d.notification_channel || ''}","${d.status || 'İtiraz Gönderildi'}"\n`;
     });
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
