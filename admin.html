@@ -60,7 +60,9 @@
         <h1>⚖️ E-Fatura İtiraz ve Delil Mazbata Yönetim Paneli</h1>
         <div class="nav-actions">
             <a href="/" class="btn" target="_blank">🌐 İtiraz Portalı</a>
-            <button class="btn btn-primary" onclick="exportCSV()">📥 CSV Dışa Aktar</button>
+            <button class="btn btn-primary" onclick="exportGIB()" title="GİB e-Fatura İptal/İtiraz Portalı Toplu Yükleme Formatı (CSV)">🏛️ GİB Portalı (CSV)</button>
+            <button class="btn" onclick="exportGIBJson()" title="GİB Uyumlu Yapısal JSON Dışa Aktarımı">📦 GİB JSON</button>
+            <button class="btn" onclick="exportCSV()">📥 Tüm Veriyi İndir (CSV)</button>
             <button class="btn" onclick="fetchData()">🔄 Yenile</button>
         </div>
     </div>
@@ -148,7 +150,10 @@
                     </select>
                     <button class="btn btn-primary" onclick="updateCurrentStatus()">Güncelle</button>
                 </div>
-                <button class="btn" onclick="window.print()">🖨️ Yazdır</button>
+                <div style="display: flex; gap: 8px;">
+                    <a id="modalDilekceLink" href="#" target="_blank" class="btn" style="background: #2563eb; color: white; text-decoration: none;">📄 TTK 18/3 İhbarnamesi</a>
+                    <button class="btn" onclick="window.print()">🖨️ Yazdır</button>
+                </div>
             </div>
         </div>
     </div>
@@ -287,6 +292,10 @@ function viewDetail(idx) {
     `;
 
     document.getElementById('detailModal').style.display = 'flex';
+    const dilekceLink = document.getElementById('modalDilekceLink');
+    if (dilekceLink && activeItem.tracking_code) {
+        dilekceLink.href = '/api/itiraz/' + encodeURIComponent(activeItem.tracking_code) + '/dilekce';
+    }
 }
 
 function closeModal() { document.getElementById('detailModal').style.display = 'none'; }
@@ -313,6 +322,14 @@ async function updateCurrentStatus() {
     localStorage.setItem('fatura_itirazlar', JSON.stringify(allData));
     closeModal();
     render();
+}
+
+function exportGIB() {
+    window.location.href = '/api/export-gib?format=csv';
+}
+
+function exportGIBJson() {
+    window.open('/api/export-gib', '_blank');
 }
 
 function exportCSV() {

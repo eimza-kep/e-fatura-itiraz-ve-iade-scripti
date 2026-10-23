@@ -302,3 +302,366 @@ def validate_evidence(evidence_type, evidence_code):
         "code": code,
         "message": "Delil bilgisi kaydedildi."
     }
+
+
+def generate_formal_notice_text(data):
+    """
+    6102 sayılı Türk Ticaret Kanunu (TTK) Madde 18/3 ve 21/2 uyarınca
+    resmi Fatura İtiraz ve İade İhbarnamesi düz metnini (plain text) üretir.
+    KEP iletisi gövdesinde veya Noter ihtarname metninde doğrudan kullanılabilir.
+    """
+    if not isinstance(data, dict):
+        raise ValueError("Geçersiz veri: Sözlük (dict) bekleniyor.")
+
+    now_str = date.today().strftime("%d.%m.%Y")
+    inv_no = data.get("invoice_number", "BELİRTİLMEDİ")
+    inv_uuid = data.get("invoice_uuid", "BELİRTİLMEDİ")
+    inv_date = data.get("invoice_date", "BELİRTİLMEDİ")
+    rec_date = data.get("received_date", "BELİRTİLMEDİ")
+    amount = data.get("invoice_amount", 0.0)
+    try:
+        amount_fmt = f"{float(amount):,.2f} TL".replace(",", "X").replace(".", ",").replace("X", ".")
+    except Exception:
+        amount_fmt = f"{amount} TL"
+
+    seller_title = data.get("seller_title", "MUHATAP ŞİRKET")
+    seller_vkn = data.get("seller_vkn", "-")
+    seller_kep = data.get("seller_kep", "Belirtilmedi")
+
+    buyer_title = data.get("buyer_title", "KEŞİDECİ ŞİRKET")
+    buyer_vkn = data.get("buyer_vkn", "-")
+    buyer_kep = data.get("buyer_kep", "Belirtilmedi")
+    buyer_auth = data.get("authorized_person", "Yetkili")
+    buyer_contact = data.get("contact_info", "-")
+
+    reason_cat = data.get("reason_category", "Sözleşme ve Hukuka Aykırılık")
+    detailed_reason = data.get("detailed_reason", "Fatura konusu mal/hizmet şirketimizce kabul edilmemiştir.")
+
+    channel = data.get("notification_channel", "KEP / Noter")
+    evidence_type = data.get("evidence_type", "")
+    evidence_barcode = data.get("evidence_barcode", "")
+    evidence_info = f"{evidence_type} (Barkod/Ref: {evidence_barcode})" if (evidence_type and evidence_barcode) else "İşbu ihtarname ekinde sunulan yasal gönderi kaydı"
+
+    deadline_info = calculate_ttk_deadline(rec_date) if rec_date != "BELİRTİLMEDİ" else {}
+    deadline_date = deadline_info.get("deadline_date", "-")
+
+    text = f"""T.C. NOTERLİĞİNE / KAYITLI ELEKTRONİK POSTA (KEP) İHBARNAMESİ
+Tarih: {now_str}
+KONU: 6102 Sayılı TTK m. 18/3 ve m. 21/2 Uyarınca Fatura İtirazı ve İade İhtarıdır.
+
+KEŞİDECİ (İTİRAZ EDEN ALICI):
+  Ticari Unvan : {buyer_title}
+  Vergi Dairesi ve VKN : {buyer_vkn}
+  KEP Adresi   : {buyer_kep}
+  Yetkili Kişi : {buyer_auth}
+  İletişim     : {buyer_contact}
+
+MUHATAP (FATURAYI DÜZENLEYEN SATICI):
+  Ticari Unvan : {seller_title}
+  Vergi Dairesi ve VKN : {seller_vkn}
+  KEP Adresi   : {seller_kep}
+
+İTİRAZA KONU FATURA BİLGİLERİ:
+  Fatura Seri ve Sıra No : {inv_no}
+  ETTN (Fatura UUID)     : {inv_uuid}
+  Fatura Düzenleme Tarihi: {inv_date}
+  Tebellüğ / Varış Tarihi: {rec_date}
+  TTK 18/3 Son İtiraz Günü: {deadline_date}
+  Fatura Toplam Tutarı   : {amount_fmt}
+  Bildirim Kanalı / Delil: {channel} - {evidence_info}
+
+İTİRAZ GEREKÇESİ:
+  Kategori: {reason_cat}
+  Açıklama: {detailed_reason}
+
+HUKUKİ DAYANAK VE İZAHAT:
+1. 6102 sayılı Türk Ticaret Kanunu'nun (TTK) 21. maddesinin 2. fıkrası uyarınca; bir fatura alan kimse aldığı tarihten itibaren sekiz (8) gün içinde faturanın içeriği hakkında bir itirazda bulunmamışsa içeriğini kabul etmiş sayılır.
+2. Yine aynı Kanun'un 18. maddesinin 3. fıkrası gereğince; tacirler arasında diğer tarafı temerrüde düşürmeye, sözleşmeyi feshe veya faturaya itiraz etmeye yönelik beyanların; noter marifetiyle, taahhütlü mektupla, telgrafla veya güvenli elektronik imza kullanılarak kayıtlı elektronik posta (KEP) sistemi ile yapılması şarttır.
+3. Yukarıda bilgileri verilen faturaya ilişkin olarak, faturanın tarafımıza ulaştığı {rec_date} tarihinden itibaren yasal 8 günlük hak düşürücü süre içerisinde işbu ihbarname ile süresinde ve usulüne uygun şekilde İTİRAZ ETMEKTEYİZ.
+4. Fatura konusu mal veya hizmet ya hiç teslim alınmamış, ya sipariş/sözleşme şartlarına aykırı tanzim edilmiş, ya da taraflar arasında mutabık kalınmayan tutarları içermektedir. Bu nedenle söz konusu fatura tarafımızca ticari defterlerimize kaydedilmemiş ve borç olarak kesinlikle kabul edilmemiştir.
+
+NETİCE VE TALEP:
+Yukarıda arz ve izah edilen yasal nedenlerle;
+1. Haksız ve hukuka aykırı olarak düzenlenen {inv_no} numaralı ve {amount_fmt} tutarlı faturaya açıkça ve esastan itiraz ettiğimizi,
+2. Söz konusu faturanın GİB e-Fatura İptal/İtiraz Portalı veya muhasebe sisteminiz üzerinden derhal İPTAL edilmesini veya İADE faturasının düzenlenmesini,
+3. İtirazımızın yasal delili olarak işbu KEP/Noter kaydının resmi kayıtlarınıza işlenmesini ve faturanın iptal edildiğine dair tarafımıza yazılı/elektronik teyit verilmesini ihtaren bildiririz.
+
+İtiraz Eden (Keşideci)
+{buyer_title}
+Yetkili: {buyer_auth}
+(5070 Sayılı Kanun Uyarınca E-İmza ile İmzalanmıştır / Noter Onaylıdır)
+"""
+    return text.strip()
+
+
+def generate_formal_notice_html(data):
+    """
+    Resmi Fatura İtiraz ve İade İhbarnamesinin A4 formatında,
+    mahkeme ve noter sunumuna hazır şık HTML çıktısını üretir.
+    """
+    text_content = generate_formal_notice_text(data)
+
+    now_str = date.today().strftime("%d.%m.%Y")
+    inv_no = data.get("invoice_number", "BELİRTİLMEDİ")
+    inv_uuid = data.get("invoice_uuid", "BELİRTİLMEDİ")
+    seller_title = data.get("seller_title", "MUHATAP ŞİRKET")
+    buyer_title = data.get("buyer_title", "KEŞİDECİ ŞİRKET")
+    buyer_auth = data.get("authorized_person", "Şirket Yetkilisi")
+    amount = data.get("invoice_amount", 0.0)
+    try:
+        amount_fmt = f"{float(amount):,.2f} TL".replace(",", "X").replace(".", ",").replace("X", ".")
+    except Exception:
+        amount_fmt = f"{amount} TL"
+
+    channel = data.get("notification_channel", "KEP / Noter")
+    evidence_type = data.get("evidence_type", "")
+    evidence_barcode = data.get("evidence_barcode", "")
+    tracking_code = data.get("tracking_code", "ITIRAZ-2026")
+
+    html = f"""<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <title>TTK 18/3 Fatura İtiraz İhbarnamesi - {inv_no}</title>
+    <style>
+        @page {{ size: A4; margin: 20mm; }}
+        body {{
+            font-family: 'Times New Roman', Times, serif;
+            color: #111;
+            line-height: 1.45;
+            background: #fff;
+            padding: 30px;
+            max-width: 800px;
+            margin: 0 auto;
+            font-size: 11pt;
+        }}
+        .header-box {{
+            text-align: center;
+            border-bottom: 2px solid #000;
+            padding-bottom: 12px;
+            margin-bottom: 20px;
+        }}
+        .header-title {{
+            font-size: 14pt;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }}
+        .header-sub {{
+            font-size: 10pt;
+            margin-top: 4px;
+            color: #333;
+        }}
+        .badge-ref {{
+            display: inline-block;
+            border: 1px solid #333;
+            padding: 3px 8px;
+            font-size: 9pt;
+            font-weight: bold;
+            margin-top: 6px;
+        }}
+        .meta-table {{
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 16px;
+        }}
+        .meta-table td {{
+            padding: 6px 8px;
+            vertical-align: top;
+            border: 1px solid #ccc;
+            font-size: 10pt;
+        }}
+        .meta-table td.lbl {{
+            font-weight: bold;
+            background-color: #f7f7f7;
+            width: 32%;
+        }}
+        .section-title {{
+            font-size: 11pt;
+            font-weight: bold;
+            background: #eee;
+            padding: 4px 8px;
+            margin: 16px 0 8px 0;
+            border-left: 4px solid #000;
+        }}
+        .text-body {{
+            text-align: justify;
+            margin-bottom: 14px;
+            text-indent: 20px;
+        }}
+        .notice-callout {{
+            border: 1px solid #000;
+            padding: 10px 14px;
+            margin: 14px 0;
+            background: #fafafa;
+            font-weight: 500;
+        }}
+        .sign-area {{
+            margin-top: 35px;
+            display: flex;
+            justify-content: space-between;
+            page-break-inside: avoid;
+        }}
+        .sign-box {{
+            width: 45%;
+            text-align: center;
+        }}
+        .sign-line {{
+            margin-top: 45px;
+            border-top: 1px dashed #000;
+            padding-top: 5px;
+            font-size: 10pt;
+        }}
+        .footer-note {{
+            margin-top: 40px;
+            border-top: 1px solid #ccc;
+            padding-top: 8px;
+            font-size: 8pt;
+            color: #555;
+            display: flex;
+            justify-content: space-between;
+        }}
+        @media print {{
+            body {{ padding: 0; }}
+            .no-print {{ display: none; }}
+        }}
+    </style>
+</head>
+<body>
+
+<div class="no-print" style="background: #eff6ff; border: 1px solid #93c5fd; padding: 12px 18px; border-radius: 8px; margin-bottom: 24px; display: flex; justify-content: space-between; align-items: center; font-family: sans-serif;">
+    <div>
+        <strong>📄 TTK 18/3 Resmi Fatura İtiraz ve İade İhbarnamesi</strong>
+        <p style="font-size: 0.85rem; color: #475569; margin-top: 2px;">Bu belgeyi yazdırabilir, PDF olarak kaydedebilir veya KEP eki olarak iletebilirsiniz.</p>
+    </div>
+    <button onclick="window.print()" style="background: #2563eb; color: white; border: none; padding: 8px 16px; border-radius: 6px; font-weight: bold; cursor: pointer;">🖨️ İhbarnameyi Yazdır / PDF</button>
+</div>
+
+<div class="header-box">
+    <div class="header-title">T.C. NOTERLİĞİNE / KAYITLI ELEKTRONİK POSTA (KEP) İHBARNAMESİ</div>
+    <div class="header-sub">6102 Sayılı Türk Ticaret Kanunu m. 18/3 ve m. 21/2 Uyarınca Yasal İtiraz ve İade Belgesi</div>
+    <div class="badge-ref">TAKİP KODU: {tracking_code} | TARİH: {now_str}</div>
+</div>
+
+<div class="section-title">1. TARAFLARIN BİLGİLERİ</div>
+<table class="meta-table">
+    <tr>
+        <td class="lbl">KEŞİDECİ (İTİRAZ EDEN)</td>
+        <td><strong>{buyer_title}</strong><br>VKN / TCKN: {data.get('buyer_vkn', '-')}<br>KEP: {data.get('buyer_kep', 'Belirtilmedi')}<br>Yetkili: {buyer_auth} | İletişim: {data.get('contact_info', '-')}</td>
+    </tr>
+    <tr>
+        <td class="lbl">MUHATAP (FATURAYI DÜZENLEYEN)</td>
+        <td><strong>{seller_title}</strong><br>VKN: {data.get('seller_vkn', '-')}<br>KEP: {data.get('seller_kep', 'Belirtilmedi')}</td>
+    </tr>
+</table>
+
+<div class="section-title">2. İTİRAZA KONU FATURA DETAYLARI</div>
+<table class="meta-table">
+    <tr>
+        <td class="lbl">Fatura Seri & Sıra No</td>
+        <td><strong>{inv_no}</strong></td>
+        <td class="lbl">Fatura Tutarı</td>
+        <td><strong>{amount_fmt}</strong></td>
+    </tr>
+    <tr>
+        <td class="lbl">ETTN (Fatura UUID)</td>
+        <td colspan="3"><code style="font-size: 9pt;">{inv_uuid}</code></td>
+    </tr>
+    <tr>
+        <td class="lbl">Fatura Düzenleme Tarihi</td>
+        <td>{data.get('invoice_date', '-')}</td>
+        <td class="lbl">Tebellüğ / Varış Tarihi</td>
+        <td>{data.get('received_date', '-')}</td>
+    </tr>
+    <tr>
+        <td class="lbl">Bildirim Yolu & Delil Kaydı</td>
+        <td colspan="3">{channel} - {evidence_type} {evidence_barcode}</td>
+    </tr>
+    <tr>
+        <td class="lbl">İtiraz Kategori Başlığı</td>
+        <td colspan="3"><strong>{data.get('reason_category', 'Sözleşme / Fiyat Uyuşmazlığı')}</strong></td>
+    </tr>
+</table>
+
+<div class="section-title">3. İTİRAZ GEREKÇESİ VE HUKUKİ İZAHAT</div>
+<p class="text-body">
+    Muhatap şirket tarafından düzenlenen yukarıda dökümü yapılan <strong>{inv_no}</strong> numaralı ve <strong>{amount_fmt}</strong> tutarlı fatura, tarafımıza ulaştığı tarihten itibaren <strong>6102 sayılı TTK'nın 18/3 ve 21/2 maddelerinde</strong> düzenlenen sekiz (8) günlük kesin yasal hak düşürücü süre içerisinde incelenmiş olup içeriğine, tutarına ve esasına açıkça itiraz edilmektedir.
+</p>
+
+<div class="notice-callout">
+    <strong>Ayrıntılı İtiraz Beyanı:</strong><br>
+    {data.get('detailed_reason', 'Fatura konusu mal/hizmet şirketimizce kabul edilmemiştir.')}
+</div>
+
+<p class="text-body">
+    Söz konusu fatura içeriğindeki mal/hizmet ya hiç teslim alınmamış, sipariş ve sözleşme şartlarına aykırı tanzim edilmiş veya mutabakat harici tutar içermektedir. Bu sebeple işbu fatura şirketimiz ticari defterlerine kaydedilmemiş, borç olarak kabul edilmemiş ve GİB nezdinde iade/iptal statüsüne alınmıştır.
+</p>
+
+<div class="section-title">4. NETİCE VE TALEP</div>
+<p class="text-body">
+    Yukarıda arz ve izah edilen yasal nedenlerle; faturanın esastan ve usulden reddedildiğini, muhasebe kayıtlarınızda ve Gelir İdaresi Başkanlığı e-Fatura / e-Arşiv sisteminde derhal İPTAL edilmesini veya İADE faturasının düzenlenmesini, iptal işlemine ilişkin tarafımıza yazılı/KEP ile teyit verilmesini ve aksi halde tüm yasal yollara başvurulacağını ihtaren bildiririz.
+</p>
+
+<div class="sign-area">
+    <div class="sign-box">
+        <strong>İhtar Eden (Keşideci)</strong><br>
+        {buyer_title}<br>
+        <span style="font-size: 9pt;">Yetkili: {buyer_auth}</span>
+        <div class="sign-line">İmza / E-İmza Kaşesi</div>
+    </div>
+    <div class="sign-box">
+        <strong>Tebliğ Eden / Gönderi Onayı</strong><br>
+        {channel}<br>
+        <span style="font-size: 9pt;">Delil No: {evidence_barcode or tracking_code}</span>
+        <div class="sign-line">Mazbata / KEP İleti Barkodu</div>
+    </div>
+</div>
+
+<div class="footer-note">
+    <span>İşbu belge e-Fatura İtiraz ve İade Sistemi tarafından TTK 18/3 uyarınca otomatik tanzim edilmiştir.</span>
+    <span>Doğrulama Kodu: {tracking_code}</span>
+</div>
+
+</body>
+</html>"""
+    return html
+
+
+def export_to_gib_format(objections_list):
+    """
+    GİB e-Fatura İptal/İtiraz Portalı toplu yükleme formatına
+    uygun JSON ve CSV yapısını üretir.
+    """
+    records = []
+    for item in objections_list:
+        rec_date = item.get("received_date") or item.get("created_at", "")[:10]
+        deadline = calculate_ttk_deadline(rec_date) if rec_date else {}
+
+        records.append({
+            "fatura_no": item.get("invoice_number", ""),
+            "ettn_uuid": item.get("invoice_uuid", ""),
+            "satici_vkn_tckn": item.get("seller_vkn", ""),
+            "satici_unvan": item.get("seller_title", ""),
+            "alici_vkn_tckn": item.get("buyer_vkn", ""),
+            "alici_unvan": item.get("buyer_title", ""),
+            "fatura_tarihi": item.get("invoice_date", ""),
+            "tebellug_tarihi": rec_date,
+            "fatura_tutari": float(item.get("invoice_amount", 0.0)),
+            "itiraz_yontemi": item.get("notification_channel", "KEP"),
+            "delil_turu": item.get("evidence_type", ""),
+            "delil_no_barkod": item.get("evidence_barcode", ""),
+            "itiraz_kategorisi": item.get("reason_category", ""),
+            "itiraz_aciklamasi": item.get("detailed_reason", ""),
+            "takip_kodu": item.get("tracking_code", ""),
+            "durum": item.get("status", "İtiraz Edildi"),
+            "ttk_sure_durumu": deadline.get("status_label", "Hesaplanamadı"),
+            "kayit_tarihi": item.get("created_at", "")
+        })
+
+    return {
+        "format_version": "GIB_EFATURA_IPTAL_ITIRAZ_V1.2",
+        "exported_at": datetime.now().isoformat(),
+        "total_count": len(records),
+        "records": records
+    }
+

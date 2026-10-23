@@ -21,10 +21,14 @@ KOBİ'ler, şirketler, mali müşavirler (SMMM) ve hukuk büroları için; Türk
   - Faturanın tebliğ tarihi girildiği anda yasal 8 günlük itiraz süresini ve kalan günleri otomatik hesaplar; 2 gün kaldığında kritik uyarı, süre dolduğunda hukuki süre aşımı alarmı verir.
 - **📑 Delil Mazbata ve Barkod Takibi:**
   - KEP Delil İletisi GUID numarası, Noter İşlem/Yevmiye Numarası veya PTT Tebliğ Barkodunu (`RR...TR`) kayıt altına alarak yasal ispat güvencesi sağlar.
-- **📄 Resmi İtiraz İhtarnamesi Üretici:**
-  - TTK 18/3 ve 21/2 dayanaklı, delil tespiti maddeleri içeren, tek tıkla yazdırılabilir veya PDF olarak saklanabilir kurumsal ihtarname üretir.
+- **📄 Resmi TTK 18/3 & 21/2 İtiraz İhbarnamesi Üretici (`/api/itiraz/{kod}/dilekce`):**
+  - TTK 18/3 ve 21/2 dayanaklı, delil tespiti maddeleri ve yasal ihtarları içeren, A4 boyutunda mahkeme ve noter standartlarında yazdırılabilir veya PDF olarak saklanabilir kurumsal ihtarname üretir.
+- **🏛️ GİB e-Fatura İptal/İtiraz Portalı Toplu Dışa Aktarımı (`/api/export-gib`):**
+  - GİB portalı toplu itiraz yükleme standartlarına tam uyumlu JSON ve CSV formatında veri ihracı sağlar.
+- **🔍 Takip Kodu ve Fatura No ile Anlık Sorgulama API'si:**
+  - Mükelleflerin veya sistemlerin itiraz durumunu, kalan yasal süreyi ve resmi ihbarnamesini anında sorgulayabileceği REST uç noktası (`/api/itiraz/{kod}`).
 - **📊 Yönetim Paneli (`/admin`):**
-  - İtiraz portföyü, kritik son 2 gün filtrelemesi, finansal toplam tutar takibi, durum güncelleme ve Excel uyumlu UTF-8 BOM CSV dışa aktarımı.
+  - İtiraz portföyü, kritik son 2 gün filtrelemesi, finansal toplam tutar takibi, durum güncelleme, tek tıkla ihtarname açma ve GİB portalı uyumlu dışa aktarım.
 - **🚀 Sıfır Bağımlılık (Zero-Dependency):**
   - Harici paket gerektirmeyen standart Python kütüphaneleri (`sqlite3`, `xml.etree`, `urllib`).
 
@@ -83,8 +87,12 @@ Dosyaları sunucunuzdaki `/itiraz/` dizinine yükleyin. `api.php` otomatik olara
 | `GET` | `/admin` | Yönetim ve süre takip paneli |
 | `GET` | `/health` | Sunucu sağlık durumu kontrolü |
 | `GET` | `/api/itirazlar` | Kayıtlı tüm itirazların listesi ve dinamik TTK süre durumu |
+| `GET` | `/api/itiraz/{kod}` | Takip kodu veya fatura no ile tekil itiraz durumu sorgulama |
+| `GET` | `/api/itiraz/{kod}/dilekce` | TTK 18/3 resmi A4 itiraz ihbarnamesi ve yazdırma şablonu (HTML) |
+| `GET` | `/api/export-gib` | GİB e-Fatura İptal/İtiraz Portalı formatında toplu dışa aktarım (JSON/CSV) |
 | `POST` | `/api/itiraz-et` | Yeni itiraz kaydı oluşturma ve resmi takip kodu alma |
 | `POST` | `/api/durum-guncelle` | İtiraz durumunu ve delil barkodunu güncelleme |
+| `POST` | `/api/generate-notice` | JSON verisinden anlık TTK 18/3 resmi ihtarname metni ve HTML çıktısı üretme |
 | `POST` | `/api/parse-ubl` | UBL-TR XML fatura içeriğini ayrıştırma |
 | `POST` | `/api/validate-kep` | KEP alan adını ve BTK yetkili sağlayıcısını doğrulama |
 | `POST` | `/api/calculate-deadline` | Tebliğ tarihine göre TTK 18/3 8 günlük süre hesabı |

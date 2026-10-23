@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import unittest
 import os
 import sys
@@ -10,7 +11,10 @@ from scripts.ubl_helper import (
     parse_ubl_xml,
     validate_kep_address,
     calculate_ttk_deadline,
-    validate_evidence
+    validate_evidence,
+    generate_formal_notice_text,
+    generate_formal_notice_html,
+    export_to_gib_format
 )
 
 SAMPLE_UBL_XML = """<?xml version="1.0" encoding="UTF-8"?>
@@ -224,6 +228,131 @@ class TestInvoiceObjectionSystem(unittest.TestCase):
 
         # Boş barkod
         self.assertFalse(validate_evidence("KEP", "")["valid"])
+
+    def test_formal_notice_text_generation(self):
+        sample_data = {
+            "tracking_code": "ITIRAZ-TEST-999",
+            "invoice_number": "GIB2026000008888",
+            "invoice_uuid": "f47ac10b-58cc-4372-a567-0e02b2c3d479",
+            "invoice_date": "2026-10-18",
+            "received_date": "2026-10-19",
+            "invoice_amount": 75000.0,
+            "seller_title": "Mega Tedarik San. Tic. A.Ş.",
+            "seller_vkn": "1234567890",
+            "seller_kep": "megatedarik@hs01.kep.tr",
+            "buyer_title": "Kuzey Bilişim Çözümleri Ltd. Şti.",
+            "buyer_vkn": "9876543210",
+            "buyer_kep": "kuzeybilisim@turkkep.hs01.kep.tr",
+            "authorized_person": "Av. Canan Demir",
+            "contact_info": "0532 111 2233",
+            "reason_category": "Yanlış Birim Fiyat veya Tutar Hesaplaması",
+            "detailed_reason": "Sözleşmede belirlenen 100 TL birim fiyat yerine faturada 150 TL uygulanmıştır.",
+            "notification_channel": "KEP (Kayıtlı Elektronik Posta)",
+            "evidence_type": "KEP",
+            "evidence_barcode": "KEP-GUID-2026-998877"
+        }
+
+        notice_text = generate_formal_notice_text(sample_data)
+        self.assertIn("6102 Sayılı TTK m. 18/3 ve m. 21/2", notice_text)
+        self.assertIn("GIB2026000008888", notice_text)
+        self.assertIn("Mega Tedarik San. Tic. A.Ş.", notice_text)
+        self.assertIn("Kuzey Bilişim Çözümleri Ltd. Şti.", notice_text)
+        self.assertIn("75.000,00 TL", notice_text)
+        self.assertIn("KEP-GUID-2026-998877", notice_text)
+        self.assertIn("sekiz (8) gün içinde", notice_text)
+
+    def test_formal_notice_html_generation(self):
+        sample_data = {
+            "tracking_code": "ITIRAZ-TEST-888",
+            "invoice_number": "GIB2026000007777",
+            "invoice_uuid": "11111111-2222-3333-4444-555555555555",
+            "invoice_date": "2026-10-20",
+            "received_date": "2026-10-21",
+            "invoice_amount": 18500.50,
+            "seller_title": "Anadolu Donanım Ltd.",
+            "seller_vkn": "5555555555",
+            "buyer_title": "Boğaziçi Lojistik A.Ş.",
+            "buyer_vkn": "4444444444",
+            "authorized_person": "Hakan Güven",
+            "reason_category": "Teslim Edilmeyen / Eksik Mallar",
+            "detailed_reason": "İrsaliye ile teslim edilen 10 adet ürün yerine faturada 50 adet faturalanmıştır."
+        }
+
+        notice_html = generate_formal_notice_html(sample_data)
+        self.assertIn("<!DOCTYPE html>", notice_html)
+        self.assertIn("GIB2026000007777", notice_html)
+        self.assertIn("Boğaziçi Lojistik A.Ş.", notice_html)
+        self.assertIn("Anadolu Donanım Ltd.", notice_html)
+        self.assertIn("18.500,50 TL", notice_html)
+        self.assertIn("window.print()", notice_html)
+        self.assertIn("TTK 18/3", notice_html)
+
+    def test_gib_export_structure(self):
+        sample_records = [
+            {
+                "tracking_code": "ITIRAZ-TEST-101",
+                "invoice_number": "GIB2026000000101",
+                "invoice_uuid": "aaaabbbb-cccc-dddd-eeee-ffff00001111",
+                "seller_vkn": "1234567890",
+                "seller_title": "Tedarikçi A.Ş.",
+                "buyer_vkn": "9876543210",
+                "buyer_title": "Müşteri Ltd.",
+                "invoice_date": "2026-10-10",
+                "received_date": "2026-10-12",
+                "invoice_amount": 45000.0,
+                "notification_channel": "KEP",
+                "evidence_type": "KEP",
+                "evidence_barcode": "KEP-DELIL-1234",
+                "reason_category": "Mükerrer Fatura",
+                "detailed_reason": "Aynı ay içerisinde iki kez fatura kesilmiştir.",
+                "status": "İtiraz Edildi",
+                "created_at": "2026-10-13T10:00:00"
+            }
+        ]
+
+        gib_export = export_to_gib_format(sample_records)
+        self.assertEqual(gib_export["format_version"], "GIB_EFATURA_IPTAL_ITIRAZ_V1.2")
+        self.assertEqual(gib_export["total_count"], 1)
+        self.assertTrue(len(gib_export["records"]) == 1)
+
+        rec = gib_export["records"][0]
+        self.assertEqual(rec["fatura_no"], "GIB2026000000101")
+        self.assertEqual(rec["ettn_uuid"], "aaaabbbb-cccc-dddd-eeee-ffff00001111")
+        self.assertEqual(rec["satici_vkn_tckn"], "1234567890")
+        self.assertEqual(rec["fatura_tutari"], 45000.0)
+        self.assertIn("Süre", rec["ttk_sure_durumu"])
+
+    def test_notice_generation_from_db_record(self):
+        cur = self.conn.cursor()
+        cur.execute("""
+            INSERT INTO invoice_objections (
+                tracking_code, invoice_number, invoice_uuid, invoice_date, received_date,
+                deadline_date, invoice_amount, seller_title, seller_vkn, seller_kep,
+                buyer_title, buyer_vkn, authorized_person, contact_info,
+                buyer_kep, reason_category, notification_channel,
+                evidence_type, evidence_barcode,
+                detailed_reason, status, created_at
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """, (
+            "ITIRAZ-TEST-777", "GIB2026000007777", "uuid-777", "2026-10-15", "2026-10-16",
+            "2026-10-24", 15000.0, "Test Satıcı Ltd.", "1111111111", "satici@hs01.kep.tr",
+            "Test Alıcı A.Ş.", "2222222222", "Ahmet Bey", "0555",
+            "alici@hs02.kep.tr", "Yanlış Fiyat", "KEP", "KEP", "GUID-777",
+            "Fiyat uyuşmazlığı", "İtiraz Gönderildi", "2026-10-17T12:00:00"
+        ))
+        self.conn.commit()
+
+        cur.execute("SELECT * FROM invoice_objections WHERE tracking_code = 'ITIRAZ-TEST-777'")
+        row = dict(cur.fetchone())
+        html = generate_formal_notice_html(row)
+        self.assertIn("GIB2026000007777", html)
+        self.assertIn("Test Satıcı Ltd.", html)
+        self.assertIn("Test Alıcı A.Ş.", html)
+        self.assertIn("GUID-777", html)
+
+        gib_export = export_to_gib_format([row])
+        self.assertEqual(gib_export["records"][0]["fatura_no"], "GIB2026000007777")
+        self.assertEqual(gib_export["records"][0]["alici_unvan"], "Test Alıcı A.Ş.")
 
     def test_files_exist(self):
         base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))

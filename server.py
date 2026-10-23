@@ -16,7 +16,10 @@ from scripts.ubl_helper import (
     parse_ubl_xml,
     validate_kep_address,
     calculate_ttk_deadline,
-    validate_evidence
+    validate_evidence,
+    generate_formal_notice_text,
+    generate_formal_notice_html,
+    export_to_gib_format
 )
 
 PORT = int(os.environ.get("PORT", 8085))
@@ -85,6 +88,10 @@ class ObjectionHandler(http.server.SimpleHTTPRequestHandler):
             self.send_json({"status": "ok", "app": "e-fatura-itiraz-ve-iade-scripti", "port": PORT})
         elif path == "/api/itirazlar":
             self.handle_get_itirazlar()
+        elif path == "/api/export-gib":
+            self.handle_export_gib(parsed.query)
+        elif path.startswith("/api/itiraz/"):
+            self.handle_get_single_itiraz(path[len("/api/itiraz/"):].strip())
         else:
             super().do_GET()
 
@@ -102,6 +109,8 @@ class ObjectionHandler(http.server.SimpleHTTPRequestHandler):
             self.handle_validate_kep()
         elif path == "/api/calculate-deadline":
             self.handle_calculate_deadline()
+        elif path == "/api/generate-notice":
+            self.handle_generate_notice()
         else:
             self.send_error(404, "Endpoint not found")
 
@@ -275,6 +284,108 @@ class ObjectionHandler(http.server.SimpleHTTPRequestHandler):
             self.send_json({"status": "success", "updated": tracking_code, "new_status": new_status})
         except Exception as e:
             self.send_json({"status": "error", "message": str(e)}, status=500)
+
+    def handle_get_single_itiraz(self, subpath):
+        is_dilekce = False
+        target_code = subpath
+        if subpath.endswith("/dilekce"):
+            is_dilekce = True
+            target_code = subpath[:-len("/dilekce")].strip()
+
+        try:
+            conn = sqlite3.connect(DB_FILE)
+            conn.row_factory = sqlite3.Row
+            cur = conn.cursor()
+            cur.execute("""
+                SELECT * FROM invoice_objections
+                WHERE tracking_code = ? OR invoice_number = ? OR invoice_uuid = ?
+                LIMIT 1
+            """, (target_code, target_code, target_code))
+            row = cur.fetchone()
+            conn.close()
+
+            if not row:
+                self.send_json({"status": "error", "message": f"'{target_code}' kodlu itiraz kaydı bulunamadı."}, status=404)
+                return
+
+            row_dict = dict(row)
+            if row_dict.get("received_date"):
+                row_dict["deadline_calc"] = calculate_ttk_deadline(row_dict["received_date"])
+
+            if is_dilekce:
+                html_notice = generate_formal_notice_html(row_dict)
+                body = html_notice.encode("utf-8")
+                self.send_response(200)
+                self.send_header("Content-Type", "text/html; charset=utf-8")
+                self.send_header("Content-Length", str(len(body)))
+                self.send_header("Access-Control-Allow-Origin", "*")
+                self.end_headers()
+                self.wfile.write(body)
+            else:
+                row_dict["notice_text_preview"] = generate_formal_notice_text(row_dict)
+                self.send_json({"status": "success", "data": row_dict})
+        except Exception as e:
+            self.send_json({"status": "error", "message": str(e)}, status=500)
+
+    def handle_export_gib(self, query):
+        try:
+            conn = sqlite3.connect(DB_FILE)
+            conn.row_factory = sqlite3.Row
+            cur = conn.cursor()
+            cur.execute("SELECT * FROM invoice_objections ORDER BY id DESC")
+            rows = [dict(r) for r in cur.fetchall()]
+            conn.close()
+
+            gib_data = export_to_gib_format(rows)
+
+            if "format=csv" in (query or ""):
+                lines = [
+                    "fatura_no,ettn_uuid,satici_vkn_tckn,satici_unvan,alici_vkn_tckn,alici_unvan,fatura_tarihi,tebellug_tarihi,fatura_tutari,itiraz_yontemi,delil_turu,delil_no_barkod,itiraz_kategorisi,ttk_sure_durumu,takip_kodu,durum"
+                ]
+                clean = lambda s: '"' + str(s).replace('"', '""') + '"'
+                for r in gib_data["records"]:
+                    line = ",".join([
+                        clean(r["fatura_no"]),
+                        clean(r["ettn_uuid"]),
+                        clean(r["satici_vkn_tckn"]),
+                        clean(r["satici_unvan"]),
+                        clean(r["alici_vkn_tckn"]),
+                        clean(r["alici_unvan"]),
+                        clean(r["fatura_tarihi"]),
+                        clean(r["tebellug_tarihi"]),
+                        clean(r["fatura_tutari"]),
+                        clean(r["itiraz_yontemi"]),
+                        clean(r["delil_turu"]),
+                        clean(r["delil_no_barkod"]),
+                        clean(r["itiraz_kategorisi"]),
+                        clean(r["ttk_sure_durumu"]),
+                        clean(r["takip_kodu"]),
+                        clean(r["durum"])
+                    ])
+                    lines.append(line)
+                csv_body = "\r\n".join(lines).encode("utf-8-sig")
+                self.send_response(200)
+                self.send_header("Content-Type", "text/csv; charset=utf-8")
+                self.send_header("Content-Disposition", 'attachment; filename="gib_itiraz_listesi.csv"')
+                self.send_header("Content-Length", str(len(csv_body)))
+                self.send_header("Access-Control-Allow-Origin", "*")
+                self.end_headers()
+                self.wfile.write(csv_body)
+            else:
+                self.send_json(gib_data)
+        except Exception as e:
+            self.send_json({"status": "error", "message": str(e)}, status=500)
+
+    def handle_generate_notice(self):
+        length = int(self.headers.get("Content-Length", 0))
+        post_data = self.rfile.read(length)
+        try:
+            data = json.loads(post_data.decode("utf-8"))
+            text = generate_formal_notice_text(data)
+            html = generate_formal_notice_html(data)
+            self.send_json({"status": "success", "notice_text": text, "notice_html": html})
+        except Exception as e:
+            self.send_json({"status": "error", "message": str(e)}, status=400)
 
 if __name__ == "__main__":
     init_db()

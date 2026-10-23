@@ -133,6 +133,17 @@
         </div>
     </div>
 
+    <!-- Hızlı İtiraz ve İhbarname Sorgulama -->
+    <div class="card" style="padding: 16px 20px; margin-bottom: 20px;">
+        <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+            <span style="font-weight: 700; font-size: 0.9rem; color: #1e293b;">🔍 İtiraz & İhbarname Sorgula:</span>
+            <input type="text" id="lookupInput" placeholder="Takip Kodu (ITIRAZ-2026-...) veya Fatura No (GIB2026...)" style="flex: 1; min-width: 260px; padding: 8px 12px;">
+            <button class="btn-submit" style="width: auto; padding: 8px 18px; font-size: 0.88rem;" onclick="lookupObjection()">Sorgula & İhbarname Aç</button>
+            <a href="/admin" class="btn-submit" style="width: auto; padding: 8px 16px; font-size: 0.88rem; background: #0f172a; text-decoration: none;">⚖️ Yönetim Paneli</a>
+        </div>
+        <div id="lookupResult" style="display: none; margin-top: 12px; padding: 10px 14px; background: #f8fafc; border: 1px solid var(--border); border-radius: 8px; font-size: 0.88rem;"></div>
+    </div>
+
     <!-- UBL XML Sürükle Bırak / Otomatik Doldurma -->
     <div class="card">
         <div class="card-title">
@@ -327,7 +338,8 @@
         </div>
 
         <div style="margin-top: 24px; display: flex; justify-content: center; gap: 12px; flex-wrap: wrap;">
-            <button class="btn-submit" style="width: auto; padding: 10px 22px; background: #0f172a;" onclick="window.print()">🖨️ Resmi Dilekçeyi Yazdır / PDF</button>
+            <a id="btnOpenDilekcePage" href="#" target="_blank" class="btn-submit" style="width: auto; padding: 10px 22px; background: #059669; text-decoration: none; display: inline-flex; align-items: center; gap: 6px;">📄 A4 Resmi İhbarnamesi</a>
+            <button class="btn-submit" style="width: auto; padding: 10px 22px; background: #0f172a;" onclick="window.print()">🖨️ Sayfayı Yazdır / PDF</button>
             <a href="/admin" class="btn-submit" style="width: auto; padding: 10px 22px; background: #2563eb; text-decoration: none; display: inline-flex; align-items: center;">⚖️ Yönetim Paneli</a>
             <button class="btn-submit" style="width: auto; padding: 10px 22px; background: #e2e8f0; color: #334155;" onclick="location.reload()">➕ Yeni Fatura İtirazı</button>
         </div>
@@ -591,6 +603,48 @@ async function handleFormSubmit(e) {
     document.getElementById('prDetailedReason').innerText = payload.detailed_reason;
     document.getElementById('prNoticeDate').innerText = new Date().toLocaleDateString('tr-TR');
     document.getElementById('prSignerTitle').innerText = payload.buyer_title;
+
+    const btnDilekce = document.getElementById('btnOpenDilekcePage');
+    if (btnDilekce) {
+        btnDilekce.href = '/api/itiraz/' + encodeURIComponent(trackingCode) + '/dilekce';
+    }
+}
+
+async function lookupObjection() {
+    const val = (document.getElementById('lookupInput').value || '').trim();
+    const box = document.getElementById('lookupResult');
+    if (!val) {
+        alert('Lütfen bir takip kodu, fatura numarası veya ETTN giriniz.');
+        return;
+    }
+    box.style.display = 'block';
+    box.innerHTML = '⏳ Kayıt sorgulanıyor...';
+    try {
+        const res = await fetch('/api/itiraz/' + encodeURIComponent(val));
+        const resData = await res.json();
+        if (res.ok && resData.status === 'success' && resData.data) {
+            const d = resData.data;
+            box.innerHTML = `
+                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+                    <div>
+                        <strong>✅ Kayıt Bulundu:</strong> ${escapeHtml(d.tracking_code || '')} | Fatura: <b>${escapeHtml(d.invoice_number || '')}</b> (${(parseFloat(d.invoice_amount)||0).toLocaleString('tr-TR', {minimumFractionDigits:2})} TL)
+                        <div style="color: #64748b; font-size: 0.8rem; margin-top: 2px;">Muhatap: ${escapeHtml(d.seller_title || '')} | Durum: <b>${escapeHtml(d.status || '')}</b></div>
+                    </div>
+                    <div style="display: flex; gap: 8px;">
+                        <a href="/api/itiraz/${encodeURIComponent(d.tracking_code)}/dilekce" target="_blank" class="btn-submit" style="width: auto; padding: 6px 14px; font-size: 0.82rem; background: #2563eb; text-decoration: none; display: inline-flex; align-items: center;">📄 Resmi İhbarnameyi Aç</a>
+                    </div>
+                </div>
+            `;
+        } else {
+            box.innerHTML = `<span style="color: #dc2626;">❌ ${resData.message || 'Kayıt bulunamadı.'}</span>`;
+        }
+    } catch (e) {
+        box.innerHTML = `<span style="color: #dc2626;">Sorgulama hatası: ${e.message}</span>`;
+    }
+}
+
+function escapeHtml(s) {
+    return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
 </script>
 
