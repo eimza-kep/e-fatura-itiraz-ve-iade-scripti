@@ -1,26 +1,18 @@
-name: CI Test Suite
+name: CI Tests
 
-on:
-  push:
-    branches: [ "main", "master" ]
-  pull_request:
-    branches: [ "main", "master" ]
+on: [push, pull_request]
 
 jobs:
   test:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ["3.10", "3.11", "3.12"]
-
+        python-version: ["3.9", "3.10", "3.11", "3.12", "3.13"]
     steps:
     - uses: actions/checkout@v4
-
-    - name: Set up Python ${{ matrix.python-version }}
+    - name: Set up Python
       uses: actions/setup-python@v5
       with:
         python-version: ${{ matrix.python-version }}
-
-    - name: Run Test Suite
-      run: |
-        python scripts/test_itiraz.py
+    - name: Run Tests
+      run: python -m unittest test_itiraz.py -v

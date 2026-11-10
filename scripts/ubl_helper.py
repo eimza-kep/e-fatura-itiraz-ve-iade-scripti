@@ -14,7 +14,9 @@ KNOWN_KEP_PROVIDERS = {
     "pttkep.hs01.kep.tr": "PTT A.Ş. Kayıtlı Elektronik Posta (KEP)",
     "tnbkep.hs01.kep.tr": "Türkiye Noterler Birliği KEP (TNBKEP)",
     "e-tugrakep.hs01.kep.tr": "E-Tuğra EBG Bilişim KEPHS",
-    "interaktifkep.hs01.kep.tr": "İnteraktif KEP Hizmetleri"
+    "interaktifkep.hs01.kep.tr": "İnteraktif KEP Hizmetleri",
+    "kolaykep.hs01.kep.tr": "Kolay KEP Bilişim Teknolojileri",
+    "kepanadolu.hs01.kep.tr": "Anadolu KEP Hizmet Sağlayıcısı",
 }
 
 def clean_tag(tag):
@@ -665,3 +667,32 @@ def export_to_gib_format(objections_list):
         "records": records
     }
 
+
+
+def get_ttk_deadline_urgency(deadline_date_str: str) -> dict:
+    """
+    TTK 18/3 kapsamındaki 8 günlük itiraz süresinin kalan gün/saat durumunu analiz eder.
+    Dönüş: {"status": "KRITIK"|"ACIL"|"NORMAL"|"SURESI_DOLDU", "days_left": int, "badge_color": str}
+    """
+    try:
+        from datetime import datetime, date
+        if isinstance(deadline_date_str, str):
+            dl = datetime.strptime(deadline_date_str[:10], "%Y-%m-%d").date()
+        elif isinstance(deadline_date_str, date):
+            dl = deadline_date_str
+        else:
+            return {"status": "BELIRSIZ", "days_left": 0, "badge_color": "gray"}
+
+        today = date.today()
+        diff = (dl - today).days
+
+        if diff < 0:
+            return {"status": "SURESI_DOLDU", "days_left": diff, "badge_color": "red"}
+        elif diff <= 1:
+            return {"status": "KRITIK", "days_left": diff, "badge_color": "rose"}
+        elif diff <= 3:
+            return {"status": "ACIL", "days_left": diff, "badge_color": "amber"}
+        else:
+            return {"status": "NORMAL", "days_left": diff, "badge_color": "emerald"}
+    except Exception:
+        return {"status": "BELIRSIZ", "days_left": 0, "badge_color": "gray"}
